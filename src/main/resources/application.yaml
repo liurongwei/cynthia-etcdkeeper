@@ -1,0 +1,37 @@
+server:
+  port: 8765
+
+spring:
+  #出现错误时, 直接抛出异常
+  mvc:
+    throw-exception-if-no-handler-found: true
+  #不要为我们工程中的资源文件建立映射
+  resources:
+    add-mappings: true
+    static-locations: classpath:static
+  thymeleaf:
+    cache: false                  # 是否开启模板缓存，默认为：true，开发时关闭缓存，不然没法看到实时页面！
+    mode: HTML                    # 指定模板的模式，默认为：HTML
+    encoding: UTF-8               # 指定模板的编码，默认为：UTF-8
+    prefix: classpath:/templates/ # 指定模板的前缀，默认为：classpath:/templates/
+    suffix: .html                 # 指定模板的后缀，默认为：.html
+    servlet:
+      content-type: text/html     # 指定 Content-Type 值，默认为：text/html
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+      health:
+        show-details: ALWAYS
+
+etcd:
+  separator: /
+  usetls: false
+  key:
+  cert:
+  cacert:
+  auth: true
+
