@@ -3,18 +3,17 @@ package com.cydia.etcdkeeper.web;
 import com.cydia.etcdkeeper.annotations.CookieProperty;
 import com.google.gson.Gson;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.MethodParameter;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
-import sun.plugin.com.TypeConverter;
-
+//import sun.plugin.com.TypeConverter;˚
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
-import java.lang.reflect.Field;
-import java.util.HashMap;
+import java.lang.reflect.Field;import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
@@ -69,7 +68,8 @@ public class CookiePropertyArgumentResolver implements HandlerMethodArgumentReso
                 value = cookies.get(cookeName);
             }
             else if(field.getType().isPrimitive()){
-                value= TypeConverter.convertObject(field.getType(),cookies.get(cookeName));
+                value= ConvertUtils.convert(cookies.get(cookeName), field.getType());
+                //value= TypeConverter.convertObject(field.getType(),cookies.get(cookeName));
             }
             else{
                 try {
