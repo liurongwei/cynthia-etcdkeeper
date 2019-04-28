@@ -10,9 +10,7 @@ import com.cydia.etcdkeeper.vo.EtcdConnectResultVo;
 import com.google.gson.Gson;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.jcache.JCacheCacheManager;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
@@ -42,17 +40,17 @@ public class EtcdV2Controller {
     @RequestMapping(value = "connect",
             consumes = {MediaType.APPLICATION_FORM_URLENCODED_VALUE},
             produces = {MediaType.APPLICATION_JSON_UTF8_VALUE})
-    public EtcdConnectResultVo connect(ConnectForm connectForm, @CookieProperty EtcdClientForm clientForm){
+    public EtcdConnectResultVo connect(ConnectForm connectForm, @CookieProperty EtcdClientForm clientForm ){
         EtcdConnectResultVo connectResultVo = new EtcdConnectResultVo();
         try {
-            connectResultVo = etcdV2Service.connect("192.168.87.9:2379", etcdConfig.isUsetls()
-                    , etcdConfig.getKey(), etcdConfig.getCert(), getConfig().getCacert());
+            connectResultVo = etcdV2Service.connect(connectForm.getHost(), false, null,null,null);
         }
         catch (InterruptedException e){
-            e.printStackTrace();
+            log.error(e.getLocalizedMessage(),e);
+            Thread.currentThread().interrupt();
         }
         catch (ExecutionException e2){
-            e2.printStackTrace();
+            log.error(e2.getLocalizedMessage(),e2);
         }
 
         log.info(new Gson().toJson(connectForm));

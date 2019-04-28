@@ -33,7 +33,7 @@ public class EtcdV2Service implements EtcdService {
             hostAndPort = endpoint.split("//")[1];
         }
 
-        try( EtcdClient client= new EtcdClient(URI.create(String.format("%s://%s", schema, hostAndPort)))) {
+        try( EtcdClient client= new EtcdClient(URI.create(String.format("%s://%s", schema, endpoint)))) {
             EtcdHealthResponse healthResponse = client.getHealth();
             EtcdSelfStatsResponse selfStatsResponse = client.getSelfStats();
             EtcdVersionResponse versionResponse = client.version();
