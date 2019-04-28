@@ -1,5 +1,6 @@
 package com.cydia.etcdkeeper.vo;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 
 /**
@@ -12,10 +13,11 @@ import lombok.Data;
  * example: {"info":{"name":"infra1","size":"98Byte","version":"3.3.11"},"status":"running"}
  **/
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class EtcdConnectResultVo {
 
     public EtcdConnectResultVo(){
-        this.info= new EtcdInfoVo();
+        //this.info= new EtcdInfoVo();
     }
 
     private String status;

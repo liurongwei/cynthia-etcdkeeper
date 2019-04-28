@@ -1,4 +1,4 @@
-package com.cydia.etcdkeeper.form;
+package com.cydia.etcdkeeper.req;
 
 import com.cydia.etcdkeeper.annotations.CookieProperty;
 import lombok.Data;
@@ -12,5 +12,5 @@ public class EtcdClientForm {
     private String apiVersion;
 
     @CookieProperty("tree-mode")
-    private String treeMode;
+    private String treeMode="path";
 }

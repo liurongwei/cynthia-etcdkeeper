@@ -1,5 +1,6 @@
 package com.cydia.etcdkeeper.config;
 
+import com.cydia.etcdkeeper.pojo.EtcdClientConfig;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -38,4 +39,7 @@ public class EtcdConfig {
 
     @JsonProperty
     private boolean auth;
+
+    @JsonProperty
+    private EtcdClientConfig client;
 }

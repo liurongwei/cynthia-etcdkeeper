@@ -28,6 +28,8 @@ management:
         show-details: ALWAYS
 
 etcd:
+  client:
+    timeout: 1500
   separator: /
   usetls: false
   key:
