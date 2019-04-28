@@ -1,5 +1,6 @@
 package com.cydia.etcdkeeper;
 
+import com.cydia.etcdkeeper.entity.ServerConfig;
 import com.cydia.etcdkeeper.repository.ServerConfigRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
@@ -19,19 +20,19 @@ public class ServerConfigRepositoryTest {
 
     @Test
     public void saveTest() throws Exception {
-        User user = new User();
-        user.setName("郑龙飞");
-        user.setUrl("http://merryyou.cn");
-        User result = serverConfigRepository.save(user);
+        ServerConfig serverConfig = new ServerConfig();
+        serverConfig.setEndpoints("192.168.87.9:2379");
+        serverConfig.setTitle("192.168.87.9");
+        ServerConfig result = serverConfigRepository.save(serverConfig);
         log.info(result.toString());
-        Assert.assertNotNull(user.getId());
+        Assert.assertNotNull(result.getId());
     }
 
     @Test
     public void findOneTest() throws Exception{
-        User user = serverConfigRepository.getOne(11 );
-        log.info(user.toString());
-        Assert.assertNotNull(user);
-        Assert.assertTrue(1l==user.getId());
+        ServerConfig serverConfig = serverConfigRepository.getOne(1 );
+        log.info(serverConfig.toString());
+        Assert.assertNotNull(serverConfig);
+        Assert.assertTrue(1==serverConfig.getId());
     }
 }
