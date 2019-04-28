@@ -6,7 +6,7 @@ import lombok.Data;
 /**
  * class_name: EtcdConnectResultVo
  * package: com.cydia.etcdkeeper.vo
- * describe: TODO
+ * describe: etcd connect result view object
  * create_user: liurongwei@yiche.com
  * create_date: 2019/4/26
  * create_time: 17:19
@@ -17,7 +17,7 @@ import lombok.Data;
 public class EtcdConnectResultVo {
 
     public EtcdConnectResultVo(){
-        //this.info= new EtcdInfoVo();
+        // TODO
     }
 
     private String status;

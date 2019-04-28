@@ -4,7 +4,6 @@ import com.cydia.etcdkeeper.service.EtcdService;
 import com.cydia.etcdkeeper.vo.EtcdConnectResultVo;
 import io.etcd.jetcd.*;
 import io.etcd.jetcd.kv.GetResponse;
-import io.etcd.jetcd.options.GetOption;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,14 +22,14 @@ public class EtcdV3Service implements EtcdService {
 
         Client client= Client.builder().endpoints(String.format("%s://%s:%s", schema, host, port)).build();
 
-        Auth authClient = client.getAuthClient();
-
         KV kvClient = client.getKVClient();
 
         ByteSequence key = ByteSequence.from("foo".getBytes());
         CompletableFuture<GetResponse> response = kvClient.get(key);
 
         List<KeyValue> keyValues = response.get().getKvs();
+
+        keyValues.get(0);
 
         return resultVo;
     }

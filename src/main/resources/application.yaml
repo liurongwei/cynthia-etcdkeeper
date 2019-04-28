@@ -16,7 +16,32 @@ spring:
     prefix: classpath:/templates/ # 指定模板的前缀，默认为：classpath:/templates/
     suffix: .html                 # 指定模板的后缀，默认为：.html
     servlet:
-      content-type: text/html     # 指定 Content-Type 值，默认为：text/html
+      content-type: text/html
+  datasource:
+    url: jdbc:h2:mem:etcdkeeper;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    platform: h2
+    username: sa
+    password:
+    driverClassName: org.h2.Driver
+    #schema: classpath:db/schema.sql    # 指定 Content-Type 值，默认为：text/html
+    data: classpath:db/data.sql
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        show_sql: true
+        use_sql_comments: true
+        format_sql: true
+    open-in-view: true
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        trace: false
+        web-allow-others: true
 
 management:
   endpoints:

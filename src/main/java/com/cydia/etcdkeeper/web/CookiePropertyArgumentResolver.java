@@ -46,7 +46,7 @@ public class CookiePropertyArgumentResolver implements HandlerMethodArgumentReso
              ) {
             CookieProperty cookieProperty = field.getAnnotation(CookieProperty.class);
 
-            if(cookieProperty==null){
+            if(field.getType().isInterface() || field.getType().isAnnotation() || cookieProperty==null){
                 continue;
             }
 
@@ -59,17 +59,12 @@ public class CookiePropertyArgumentResolver implements HandlerMethodArgumentReso
                 continue;
             }
 
-            if(field.getType().isInterface() || field.getType().isAnnotation()){
-                continue;
-            }
-
             Object value= null;
             if(field.getType() == String.class){
                 value = cookies.get(cookeName);
             }
             else if(field.getType().isPrimitive()){
                 value= ConvertUtils.convert(cookies.get(cookeName), field.getType());
-                //value= TypeConverter.convertObject(field.getType(),cookies.get(cookeName));
             }
             else{
                 try {

@@ -41,16 +41,13 @@ public class EtcdV2Controller {
             consumes = {MediaType.APPLICATION_FORM_URLENCODED_VALUE},
             produces = {MediaType.APPLICATION_JSON_UTF8_VALUE})
     public EtcdConnectResultVo connect(ConnectForm connectForm, @CookieProperty EtcdClientForm clientForm ){
-        EtcdConnectResultVo connectResultVo =
-            connectResultVo = etcdV2Service.connect(connectForm.getHost(), false, null,null,null);
-        return connectResultVo;
+        return etcdV2Service.connect(connectForm.getHost(), false, null,null,null);
     }
 
 
     @RequestMapping("/cache-test")
     @Cacheable(value = "cacheTest", key = "#num" , condition = "#num> 10")
     public String cacheTest(Integer num){
-
         return String.valueOf(num);
     }
 
@@ -61,9 +58,7 @@ public class EtcdV2Controller {
 
         log.info(query.toString());
 
-        EtcdWrapperNode node = etcdV2Service.getPath(clientForm, query.getKey(),query.isPrefix());
-
-        return node;
+        return etcdV2Service.getPath(clientForm, query.getKey(),query.isPrefix());
     }
 
     @RequestMapping("/get")
@@ -72,9 +67,7 @@ public class EtcdV2Controller {
 
         log.info(query.toString());
 
-        EtcdWrapperNode node = etcdV2Service.getKey(clientForm, query.getKey());
-
-        return node;
+        return etcdV2Service.getKey(clientForm, query.getKey());
     }
 
     @PutMapping(value = "/put")
@@ -83,9 +76,7 @@ public class EtcdV2Controller {
 
         log.info(nodeForm.toString());
 
-        EtcdWrapperNode node = etcdV2Service.put(clientForm,nodeForm);
-
-        return node;
+        return etcdV2Service.put(clientForm,nodeForm);
     }
 
     @PostMapping(value="/delete")
@@ -95,8 +86,6 @@ public class EtcdV2Controller {
 
         EtcdWrapperNode node = etcdV2Service.deleteKey(clientForm,nodeForm);
 
-        String result = node!=null && node.getNode() !=null ? "ok" :"faild";
-
-        return result;
+        return node!=null && node.getNode() !=null ? "ok" :"faild";
     }
 }
