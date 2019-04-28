@@ -5,13 +5,12 @@ import com.cydia.etcdkeeper.annotations.CookieProperty;
 import com.cydia.etcdkeeper.config.EtcdConfig;
 import com.cydia.etcdkeeper.pojo.EtcdWrapperNode;
 import com.cydia.etcdkeeper.req.ConnectForm;
-import com.cydia.etcdkeeper.req.CreateNodeForm;
+import com.cydia.etcdkeeper.req.EditNodeForm;
 import com.cydia.etcdkeeper.req.EtcdClientForm;
 import com.cydia.etcdkeeper.req.GetPathQuery;
 import com.cydia.etcdkeeper.service.impl.EtcdV2Service;
 import com.cydia.etcdkeeper.vo.EtcdConnectResultVo;
 import lombok.extern.slf4j.Slf4j;
-import mousio.etcd4j.responses.EtcdKeysResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.MediaType;
@@ -79,7 +78,7 @@ public class EtcdV2Controller {
     }
 
     @PutMapping(value = "/put")
-    public EtcdWrapperNode put(@CookieProperty EtcdClientForm clientForm, CreateNodeForm nodeForm){
+    public EtcdWrapperNode put(@CookieProperty EtcdClientForm clientForm, EditNodeForm nodeForm){
         log.info(clientForm.toString());
 
         log.info(nodeForm.toString());
@@ -87,5 +86,17 @@ public class EtcdV2Controller {
         EtcdWrapperNode node = etcdV2Service.put(clientForm,nodeForm);
 
         return node;
+    }
+
+    @PostMapping(value="/delete")
+    public String delete(@CookieProperty EtcdClientForm clientForm, EditNodeForm nodeForm){
+        log.info(clientForm.toString());
+        log.info(nodeForm.toString());
+
+        EtcdWrapperNode node = etcdV2Service.deleteKey(clientForm,nodeForm);
+
+        String result = node!=null && node.getNode() !=null ? "ok" :"faild";
+
+        return result;
     }
 }

@@ -2,7 +2,7 @@ package com.cydia.etcdkeeper.service.impl;
 
 import com.cydia.etcdkeeper.config.EtcdConfig;
 import com.cydia.etcdkeeper.pojo.EtcdWrapperNode;
-import com.cydia.etcdkeeper.req.CreateNodeForm;
+import com.cydia.etcdkeeper.req.EditNodeForm;
 import com.cydia.etcdkeeper.req.EtcdClientForm;
 import com.cydia.etcdkeeper.service.EtcdService;
 import com.cydia.etcdkeeper.vo.EtcdConnectResultVo;
@@ -10,7 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 import mousio.client.retry.RetryOnce;
 import mousio.etcd4j.EtcdClient;
 import mousio.etcd4j.promises.EtcdResponsePromise;
-import mousio.etcd4j.requests.EtcdKeyGetRequest;
 import mousio.etcd4j.responses.EtcdHealthResponse;
 import mousio.etcd4j.responses.EtcdKeysResponse;
 import mousio.etcd4j.responses.EtcdSelfStatsResponse;
@@ -127,13 +126,47 @@ public class EtcdV2Service implements EtcdService {
         return rootNode;
     }
 
-    public EtcdWrapperNode put(EtcdClientForm clientForm, CreateNodeForm nodeForm){
+    public EtcdWrapperNode put(EtcdClientForm clientForm, EditNodeForm nodeForm){
         EtcdWrapperNode rootNode = null;
 
         try(EtcdClient client = getClient(clientForm.getEndpoint(),false)){
 
-            EtcdResponsePromise<EtcdKeysResponse> responsePromise = client.put(nodeForm.getKey(),nodeForm.getValue())
-                    .ttl(nodeForm.getTtl()<=0 ? null : nodeForm.getTtl()).send();
+            EtcdResponsePromise<EtcdKeysResponse> responsePromise ;
+
+            if(nodeForm.isDir()) {
+                responsePromise = client.putDir(nodeForm.getKey())
+                        .ttl(nodeForm.getTtl() <= 0 ? null : nodeForm.getTtl()).send();
+            }
+            else {
+                responsePromise = client.put(nodeForm.getKey(), nodeForm.getValue())
+                        .ttl(nodeForm.getTtl() <= 0 ? null : nodeForm.getTtl()).send();
+            }
+
+            EtcdKeysResponse.EtcdNode node = responsePromise.get().node;
+
+            rootNode= new EtcdWrapperNode();
+            rootNode.setNode(node);
+        }
+        catch (Exception e){
+            log.error(e.getMessage(), e);
+        }
+
+        return rootNode;
+    }
+
+    public EtcdWrapperNode deleteKey(EtcdClientForm clientForm, EditNodeForm nodeForm){
+        EtcdWrapperNode rootNode = null;
+
+        try(EtcdClient client = getClient(clientForm.getEndpoint(),false)){
+
+            EtcdResponsePromise<EtcdKeysResponse> responsePromise =  null;
+
+            if(nodeForm.isDir()) {
+                responsePromise = client.deleteDir(nodeForm.getKey()).recursive().send();
+            }
+            else{
+                responsePromise = client.delete(nodeForm.getKey()).send();
+            }
 
             EtcdKeysResponse.EtcdNode node = responsePromise.get().node;
 

@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class CreateNodeForm {
+public class EditNodeForm {
 
     private boolean dir;
 
