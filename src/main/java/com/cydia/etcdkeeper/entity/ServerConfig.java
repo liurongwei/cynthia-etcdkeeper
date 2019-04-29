@@ -19,13 +19,20 @@ public class ServerConfig {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(length = 255)
-    private String title;
+    @Column(length = 32)
+    private String name = "";
 
-    @Column(length = 255)
-    private String endpoints;
+    @Column(length = 255, nullable = false)
+    private String title = "";
 
-    private boolean useTls;
+    @Column(length = 255, nullable = false)
+    private String endpoints = "";
+
+    @Column(length = 4,nullable = false)
+    private String apiVersion = "2";
+
+    @Column(nullable = false)
+    private boolean useTls = false;
 
     @Column(length = 255)
     private String keyFile;
@@ -36,7 +43,8 @@ public class ServerConfig {
     @Column(length = 255)
     private String certFile;
 
-    private boolean useAuth;
+    @Column(nullable = false)
+    private boolean useAuth = false;
 
     @Column(length = 64)
     private String username;
@@ -44,9 +52,11 @@ public class ServerConfig {
     @Column(length = 32)
     private String password;
 
+    @Column(columnDefinition = "timestamp default current_timestamp on update current_timestamp")
     @CreationTimestamp
     private Date createTime;
 
+    @Column(columnDefinition = "timestamp default current_timestamp")
     @UpdateTimestamp
     private Date updateTime;
 }
