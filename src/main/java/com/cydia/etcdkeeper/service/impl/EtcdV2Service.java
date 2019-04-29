@@ -1,27 +1,43 @@
 package com.cydia.etcdkeeper.service.impl;
 
 import com.cydia.etcdkeeper.config.EtcdConfig;
+import com.cydia.etcdkeeper.entity.ServerConfig;
+import com.cydia.etcdkeeper.exception.EtcdKeeperException;
 import com.cydia.etcdkeeper.pojo.EtcdWrapperNode;
 import com.cydia.etcdkeeper.req.EditNodeForm;
 import com.cydia.etcdkeeper.req.EtcdClientForm;
 import com.cydia.etcdkeeper.service.EtcdService;
+import com.cydia.etcdkeeper.utils.EtcdUtils;
 import com.cydia.etcdkeeper.vo.EtcdConnectResultVo;
+import com.cydia.etcdkeeper.vo.EtcdInfoVo;
+import com.google.common.collect.Lists;
+import com.google.gson.Gson;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
 import lombok.extern.slf4j.Slf4j;
 import mousio.client.retry.RetryOnce;
 import mousio.etcd4j.EtcdClient;
+import mousio.etcd4j.EtcdSecurityContext;
+import mousio.etcd4j.EtcdUtil;
 import mousio.etcd4j.promises.EtcdResponsePromise;
-import mousio.etcd4j.responses.EtcdHealthResponse;
-import mousio.etcd4j.responses.EtcdKeysResponse;
-import mousio.etcd4j.responses.EtcdSelfStatsResponse;
-import mousio.etcd4j.responses.EtcdVersionResponse;
+import mousio.etcd4j.requests.EtcdStoreStatsRequest;
+import mousio.etcd4j.responses.*;
 import mousio.etcd4j.transport.EtcdNettyClient;
 import mousio.etcd4j.transport.EtcdNettyConfig;
+import org.apache.commons.collections.ListUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 
+import javax.net.ssl.SSLException;
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service("EtcdV2")
@@ -33,6 +49,8 @@ public class EtcdV2Service implements EtcdService {
     @Autowired
     private EtcdConfig etcdConfig;
 
+    private final Gson gson = new Gson();
+
     public EtcdConnectResultVo connect(String endpoint, boolean usetls, String keyFile,
                                        String certFile, String caFile) {
         EtcdConnectResultVo resultVo= new EtcdConnectResultVo();
@@ -43,7 +61,7 @@ public class EtcdV2Service implements EtcdService {
 
             EtcdHealthResponse healthResponse = client.getHealth();
             if(healthResponse!=null) {
-                resultVo.setInfo(new EtcdConnectResultVo.EtcdInfoVo());
+                resultVo.setInfo(new EtcdInfoVo());
 
                 EtcdSelfStatsResponse selfStatsResponse = client.getSelfStats();
                 EtcdVersionResponse versionResponse = client.version();
@@ -178,5 +196,85 @@ public class EtcdV2Service implements EtcdService {
         }
 
         return rootNode;
+    }
+
+    /**
+     * connect to etcd and get the server info
+     *
+     * @param serverConfig server config object
+     * @return connect result
+     */
+    @Override
+    public EtcdInfoVo connect(ServerConfig serverConfig) {
+        EtcdInfoVo etcdInfoVo = null;
+        List<String> endpoints = EtcdUtils.getEndpoints(serverConfig.getEndpoints(), serverConfig.isUseTls());
+
+        if (endpoints== null || endpoints.size()<1 ) {
+            throw new EtcdKeeperException(String.format("etcd endpoints needs to specified, config details: $s",
+                    gson.toJson(serverConfig)));
+        }
+
+        try {
+            try( EtcdClient client= getClient(serverConfig) ) {
+
+                EtcdHealthResponse healthResponse = client.getHealth();
+                if(healthResponse!=null) {
+                    etcdInfoVo = new EtcdInfoVo();
+
+                    EtcdStoreStatsResponse storeStatsResponse= client.getStoreStats();
+                    EtcdSelfStatsResponse selfStatsResponse = client.getSelfStats();
+                    EtcdVersionResponse versionResponse = client.version();
+
+                    etcdInfoVo.setVersion(versionResponse.server);
+                    etcdInfoVo.setName(selfStatsResponse.getName());
+                    etcdInfoVo.setSize("unkown");
+                }
+            }
+        } catch (IOException e) {
+            log.error(String.format("connect to server faild, server config : %s", gson.toJson(serverConfig)),e);
+        }
+
+        return etcdInfoVo;
+    }
+
+    private EtcdClient getClient(ServerConfig serverConfig){
+
+        List<URI> uriList = EtcdUtils.getUris(serverConfig.getEndpoints(), serverConfig.isUseTls());
+
+        EtcdNettyConfig config = new EtcdNettyConfig();
+        config.setConnectTimeout(etcdConfig.getClient().getTimeout());
+
+        EtcdClient client = null;
+        if(serverConfig.isUseTls()) {
+
+            SslContext sslContext = null;
+            try {
+                sslContext = SslContextBuilder.forClient().keyManager(new File( serverConfig.getCertFile()),
+                        new File( serverConfig.getKeyFile())).build();
+            } catch (SSLException e) {
+                throw new EtcdKeeperException(String.format("create ssl context for server config %s faild",
+                        gson.toJson(serverConfig)), e);
+            }
+
+            EtcdNettyClient nettyClient =  null;
+            if(serverConfig.isUseAuth()){
+                EtcdSecurityContext securityContext = new EtcdSecurityContext(sslContext,serverConfig.getUsername(),serverConfig.getPassword()) ;
+                nettyClient = new EtcdNettyClient(config, securityContext, uriList.toArray(new URI[uriList.size()]));
+            }
+            else {
+                nettyClient = new EtcdNettyClient(config, sslContext, uriList.toArray(new URI[uriList.size()]));
+            }
+
+            client = new EtcdClient(nettyClient);
+        }
+        else {
+            EtcdNettyClient nettyClient = new EtcdNettyClient(config, uriList.toArray(new URI[uriList.size()]));
+            client = new EtcdClient(nettyClient);
+        }
+
+        //no try
+        client.setRetryHandler(new RetryOnce(100));
+
+        return client;
     }
 }

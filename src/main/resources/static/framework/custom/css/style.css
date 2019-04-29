@@ -17,6 +17,10 @@ h2 {
 	display:none;
 }
 
-.noborder span{
-    border: 0px solid #ddd;
+/*.noborder span{*/
+    /*border: 0px solid #ddd;*/
+/*}*/
+
+.combobox-item, .combobox-group{
+    padding: 8px;
 }

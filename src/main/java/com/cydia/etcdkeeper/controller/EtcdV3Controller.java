@@ -7,8 +7,11 @@ import com.cydia.etcdkeeper.req.ConnectForm;
 import com.cydia.etcdkeeper.req.EtcdClientForm;
 import com.cydia.etcdkeeper.service.impl.EtcdV3Service;
 import com.cydia.etcdkeeper.vo.EtcdConnectResultVo;
+import com.cydia.etcdkeeper.vo.EtcdInfoVo;
+import com.cydia.etcdkeeper.vo.JsonResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,31 +30,21 @@ public class EtcdV3Controller {
     @Autowired
     private EtcdV3Service etcdV3Service;
 
-    @RequestMapping(value = "/separator", produces="text/plain;charset=UTF-8")
-    public String separator(){
+    @RequestMapping(value = "/separator", produces = "text/plain;charset=UTF-8")
+    public String separator() {
         return etcdConfig.getSeparator();
     }
 
     @PostMapping(value = "/connect",
             consumes = {MediaType.APPLICATION_FORM_URLENCODED_VALUE},
             produces = {MediaType.APPLICATION_JSON_UTF8_VALUE})
-    public EtcdConnectResultVo connect(ConnectForm connectForm, @CookieProperty EtcdClientForm clientForm ){
-        EtcdConnectResultVo connectResultVo = new EtcdConnectResultVo();
+    public JsonResult connect(ConnectForm connectForm, @CookieProperty EtcdClientForm clientForm) {
 
-        try {
-            ServerConfig serverConfig = new ServerConfig();
-            serverConfig.setEndpoints(clientForm.getEndpoint());
-            serverConfig.setTitle("test");
+        ServerConfig serverConfig = new ServerConfig();
+        serverConfig.setEndpoints(clientForm.getEndpoint());
+        serverConfig.setTitle("test");
 
-            connectResultVo = etcdV3Service.connect(serverConfig);
-        }
-        catch (InterruptedException e){
-            log.error(e.getMessage(),e);
-        }
-        catch (ExecutionException e){
-            log.error(e.getMessage(),e);
-        }
-
-        return connectResultVo;
+        EtcdInfoVo etcdInfoVo = etcdV3Service.connect(serverConfig);
+        return JsonResult.builder().data(etcdInfoVo).build().success();
     }
 }

@@ -25,13 +25,4 @@ public class EtcdConnectResultVo {
     private String message;
 
     private EtcdInfoVo info;
-
-    @Data
-    public static class EtcdInfoVo{
-        private String name;
-
-        private String size;
-
-        private String version;
-    }
 }
