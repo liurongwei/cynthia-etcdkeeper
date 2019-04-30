@@ -24,3 +24,5 @@ h2 {
 .combobox-item, .combobox-group{
     padding: 8px;
 }
+
+.easyui-window td { padding: 10px; }

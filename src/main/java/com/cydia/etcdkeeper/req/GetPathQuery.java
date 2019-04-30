@@ -8,4 +8,6 @@ public class GetPathQuery {
     private String key;
 
     private boolean prefix;
+
+    private int id;
 }

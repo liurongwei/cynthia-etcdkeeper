@@ -1,6 +1,9 @@
 package com.cydia.etcdkeeper.service;
 
 import com.cydia.etcdkeeper.entity.ServerConfig;
+import com.cydia.etcdkeeper.pojo.EtcdNode;
+import com.cydia.etcdkeeper.req.EditNodeForm;
+import com.cydia.etcdkeeper.req.GetPathQuery;
 import com.cydia.etcdkeeper.vo.EtcdInfoVo;
 
 /**
@@ -19,4 +22,35 @@ public interface EtcdService {
      * @return connect result
      */
     EtcdInfoVo connect(ServerConfig serverConfig);
+
+    /**
+     * query path
+     * @param query path query condition
+     * @return EtcdNode object
+     */
+    EtcdNode getPath(GetPathQuery query);
+
+
+    /**
+     * query path
+     * @param query path query condition
+     * @return EtcdNode object
+     */
+    EtcdNode getKey(GetPathQuery query);
+
+
+    /**
+     * edit key
+     * @param form form with key and value
+     * @return edit node result
+     */
+    EtcdNode putKv(EditNodeForm form);
+
+
+    /**
+     * delete node form specified server
+     * @param form node & server parameters
+     * @return deleted nodes
+     */
+    EtcdNode delete(EditNodeForm form);
 }

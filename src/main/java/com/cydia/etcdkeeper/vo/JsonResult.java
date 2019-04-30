@@ -8,20 +8,20 @@ import lombok.Data;
 @Builder
 public class JsonResult<T> {
 
-    private int code;
+    private int status;
 
     private String message;
 
     private T data;
 
     public JsonResult success(){
-        this.setCode(ResultCodes.Success.getCode());
+        this.setStatus(ResultCodes.Success.getCode());
         this.setMessage(ResultCodes.Success.getMessage());
         return this;
     }
 
     public JsonResult failed(){
-        this.setCode(ResultCodes.Error.getCode());
+        this.setStatus(ResultCodes.Error.getCode());
         this.setMessage(ResultCodes.Error.getMessage());
         return this;
     }

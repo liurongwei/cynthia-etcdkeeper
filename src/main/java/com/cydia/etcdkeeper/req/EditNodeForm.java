@@ -6,6 +6,7 @@ import lombok.Data;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class EditNodeForm {
+    private Integer serverId;
 
     private boolean dir;
 
@@ -13,5 +14,5 @@ public class EditNodeForm {
 
     private String value;
 
-    private int ttl;
+    private Integer ttl;
 }

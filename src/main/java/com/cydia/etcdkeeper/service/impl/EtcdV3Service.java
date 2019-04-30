@@ -2,6 +2,9 @@ package com.cydia.etcdkeeper.service.impl;
 
 import com.cydia.etcdkeeper.entity.ServerConfig;
 import com.cydia.etcdkeeper.exception.EtcdKeeperException;
+import com.cydia.etcdkeeper.pojo.EtcdNode;
+import com.cydia.etcdkeeper.req.EditNodeForm;
+import com.cydia.etcdkeeper.req.GetPathQuery;
 import com.cydia.etcdkeeper.service.EtcdService;
 import com.cydia.etcdkeeper.utils.EtcdUtils;
 import com.cydia.etcdkeeper.vo.EtcdConnectResultVo;
@@ -57,5 +60,49 @@ public class EtcdV3Service implements EtcdService {
         keyValues.get(0);
 
         return resultVo;
+    }
+
+    /**
+     * edit key
+     *
+     * @param form form with key and value
+     * @return edit node result
+     */
+    @Override
+    public EtcdNode putKv(EditNodeForm form) {
+        return null;
+    }
+
+    /**
+     * delete node form specified server
+     *
+     * @param form node & server parameters
+     * @return deleted nodes
+     */
+    @Override
+    public EtcdNode delete(EditNodeForm form) {
+        return null;
+    }
+
+    /**
+     * query path
+     *
+     * @param query path query condition
+     * @return EtcdNode object
+     */
+    @Override
+    public EtcdNode getPath(GetPathQuery query) {
+        return null;
+    }
+
+    /**
+     * query path
+     *
+     * @param query path query condition
+     * @return EtcdNode object
+     */
+    @Override
+    public EtcdNode getKey(GetPathQuery query) {
+        return null;
     }
 }
