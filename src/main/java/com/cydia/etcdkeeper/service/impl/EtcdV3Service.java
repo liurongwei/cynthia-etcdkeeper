@@ -7,18 +7,13 @@ import com.cydia.etcdkeeper.req.EditNodeForm;
 import com.cydia.etcdkeeper.req.GetPathQuery;
 import com.cydia.etcdkeeper.service.EtcdService;
 import com.cydia.etcdkeeper.utils.EtcdUtils;
-import com.cydia.etcdkeeper.vo.EtcdConnectResultVo;
 import com.cydia.etcdkeeper.vo.EtcdInfoVo;
-import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import io.etcd.jetcd.*;
 import io.etcd.jetcd.kv.GetResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -34,7 +29,7 @@ public class EtcdV3Service implements EtcdService {
 
         List<String> endpoints = EtcdUtils.getEndpoints(serverConfig.getEndpoints(), serverConfig.isUseTls());
 
-        if (endpoints== null || endpoints.size()<1 ) {
+        if (endpoints == null || endpoints.size() < 1) {
             throw new EtcdKeeperException(String.format("etcd endpoints needs to specified, config details: $s",
                     gson.toJson(serverConfig)));
         }
@@ -51,10 +46,11 @@ public class EtcdV3Service implements EtcdService {
             keyValues = response.get().getKvs();
         } catch (InterruptedException e) {
             log.error(String.format("get keys from server %s faild , server config : %s",
-                    serverConfig.getEndpoints(), gson.toJson(serverConfig)),e);
+                    serverConfig.getEndpoints(), gson.toJson(serverConfig)), e);
+            Thread.currentThread().interrupt();
         } catch (ExecutionException e) {
             log.error(String.format("get keys from server %s faild , server config : %s",
-                    serverConfig.getEndpoints(), gson.toJson(serverConfig)),e);
+                    serverConfig.getEndpoints(), gson.toJson(serverConfig)), e);
         }
 
         keyValues.get(0);

@@ -16,10 +16,6 @@ import lombok.Data;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class EtcdConnectResultVo {
 
-    public EtcdConnectResultVo(){
-        // TODO
-    }
-
     private String status;
 
     private String message;

@@ -3,20 +3,18 @@ package com.cydia.etcdkeeper.controller;
 import com.cydia.etcdkeeper.annotations.CookieProperty;
 import com.cydia.etcdkeeper.config.EtcdConfig;
 import com.cydia.etcdkeeper.entity.ServerConfig;
-import com.cydia.etcdkeeper.enums.ResultCodes;
 import com.cydia.etcdkeeper.pojo.EtcdNode;
 import com.cydia.etcdkeeper.repository.ServerConfigRepository;
+import com.cydia.etcdkeeper.req.ConnectForm;
 import com.cydia.etcdkeeper.req.EditNodeForm;
 import com.cydia.etcdkeeper.req.EtcdClientForm;
 import com.cydia.etcdkeeper.req.GetPathQuery;
 import com.cydia.etcdkeeper.service.EtcdService;
 import com.cydia.etcdkeeper.service.EtcdServiceFactory;
-import com.cydia.etcdkeeper.vo.EtcdConnectResultVo;
 import com.cydia.etcdkeeper.vo.EtcdInfoVo;
 import com.cydia.etcdkeeper.vo.JsonResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -49,7 +47,7 @@ public class EtcdController {
     }
 
     @PostMapping("connect")
-    public JsonResult connect(@RequestBody ServerConfig server){
+    public JsonResult connect(@RequestBody ConnectForm server){
 
         EtcdService service = serviceFactory.getService(server.getId());
         ServerConfig serverConfig = serverConfigRepository.getOne(server.getId());
@@ -62,7 +60,7 @@ public class EtcdController {
     @GetMapping("path")
     public JsonResult getPath(@CookieProperty EtcdClientForm clientForm, GetPathQuery query){
 
-        EtcdService service = serviceFactory.getService(query.getId());
+        EtcdService service = serviceFactory.getService(query.getServerId());
 
         EtcdNode node = service.getPath(query);
 
@@ -72,7 +70,7 @@ public class EtcdController {
     @GetMapping("key")
     public JsonResult getKey(@CookieProperty EtcdClientForm clientForm, GetPathQuery query){
 
-        EtcdService service = serviceFactory.getService(query.getId());
+        EtcdService service = serviceFactory.getService(query.getServerId());
         EtcdNode node = service.getKey(query);
 
         return JsonResult.builder().data(node).build().success();

@@ -4,14 +4,11 @@ import com.cydia.etcdkeeper.config.EtcdConfig;
 import com.cydia.etcdkeeper.entity.ServerConfig;
 import com.cydia.etcdkeeper.exception.EtcdKeeperException;
 import com.cydia.etcdkeeper.pojo.EtcdNode;
-import com.cydia.etcdkeeper.pojo.EtcdWrapperNode;
 import com.cydia.etcdkeeper.repository.ServerConfigRepository;
 import com.cydia.etcdkeeper.req.EditNodeForm;
-import com.cydia.etcdkeeper.req.EtcdClientForm;
 import com.cydia.etcdkeeper.req.GetPathQuery;
 import com.cydia.etcdkeeper.service.EtcdService;
 import com.cydia.etcdkeeper.utils.EtcdUtils;
-import com.cydia.etcdkeeper.vo.EtcdConnectResultVo;
 import com.cydia.etcdkeeper.vo.EtcdInfoVo;
 import com.google.gson.Gson;
 import io.netty.handler.ssl.SslContext;
@@ -21,7 +18,6 @@ import mousio.client.retry.RetryOnce;
 import mousio.etcd4j.EtcdClient;
 import mousio.etcd4j.EtcdSecurityContext;
 import mousio.etcd4j.promises.EtcdResponsePromise;
-import mousio.etcd4j.requests.EtcdKeyGetRequest;
 import mousio.etcd4j.responses.*;
 import mousio.etcd4j.transport.EtcdNettyClient;
 import mousio.etcd4j.transport.EtcdNettyConfig;
@@ -35,7 +31,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
-import java.util.concurrent.TimeoutException;
 
 @Slf4j
 @Service("EtcdV2")
@@ -51,143 +46,6 @@ public class EtcdV2Service implements EtcdService {
     private ServerConfigRepository serverConfigRepository;
 
     private final Gson gson = new Gson();
-
-    public EtcdConnectResultVo connect(String endpoint, boolean usetls, String keyFile,
-                                       String certFile, String caFile) {
-        EtcdConnectResultVo resultVo = new EtcdConnectResultVo();
-
-        try (EtcdClient client = getClient(endpoint, usetls)) {
-
-            EtcdHealthResponse healthResponse = client.getHealth();
-            if (healthResponse != null) {
-                resultVo.setInfo(new EtcdInfoVo());
-
-                EtcdSelfStatsResponse selfStatsResponse = client.getSelfStats();
-                EtcdVersionResponse versionResponse = client.version();
-
-                resultVo.getInfo().setVersion(versionResponse.server);
-                resultVo.getInfo().setName(selfStatsResponse.getName());
-                resultVo.getInfo().setSize("unknow");
-                resultVo.setStatus("true".equals(healthResponse.getHealth()) ? "ok" : "error");
-            } else {
-                resultVo.setStatus("timeout");
-                resultVo.setMessage(String.format("endpoint %s is unreachable", endpoint));
-            }
-        } catch (IOException e) {
-            resultVo.setStatus("error");
-            resultVo.setMessage("cann't get server status," + e.getLocalizedMessage());
-        }
-
-        return resultVo;
-    }
-
-    private EtcdClient getClient(String endpoint, boolean usetls) {
-
-        String hostAndPort = endpoint;
-        if (endpoint.startsWith("http://") || endpoint.startsWith("https://")) {
-            hostAndPort = endpoint.split("//")[1];
-        }
-
-        String schema = usetls ? "https" : "http";
-
-        EtcdNettyConfig config = new EtcdNettyConfig();
-        config.setConnectTimeout(etcdConfig.getClient().getTimeout());
-        EtcdNettyClient nettyClient = new EtcdNettyClient(config,
-                URI.create(String.format("%s://%s", schema, hostAndPort)));
-        EtcdClient client = new EtcdClient(nettyClient);
-
-        //no try
-        client.setRetryHandler(new RetryOnce(100));
-
-        return client;
-    }
-
-    public EtcdWrapperNode getPath(EtcdClientForm clientForm, String key, boolean prefix) {
-
-        EtcdWrapperNode rootNode = null;
-
-        try (EtcdClient client = getClient(clientForm.getEndpoint(), false)) {
-
-            EtcdResponsePromise<EtcdKeysResponse> responsePromise = client.get(key).recursive().sorted().send();
-
-            EtcdKeysResponse.EtcdNode node = responsePromise.get().node;
-
-            rootNode = new EtcdWrapperNode();
-            rootNode.setNode(node);
-        } catch (Exception e) {
-            log.error(e.getMessage(), e);
-        }
-
-        return rootNode;
-    }
-
-    public EtcdWrapperNode getKey(EtcdClientForm clientForm, String key) {
-        EtcdWrapperNode rootNode = null;
-
-        try (EtcdClient client = getClient(clientForm.getEndpoint(), false)) {
-
-            EtcdResponsePromise<EtcdKeysResponse> responsePromise = client.get(key).send();
-
-            EtcdKeysResponse.EtcdNode node = responsePromise.get().node;
-
-            rootNode = new EtcdWrapperNode();
-            rootNode.setNode(node);
-        } catch (Exception e) {
-            log.error(e.getMessage(), e);
-        }
-
-        return rootNode;
-    }
-
-    public EtcdWrapperNode put(EtcdClientForm clientForm, EditNodeForm nodeForm) {
-        EtcdWrapperNode rootNode = null;
-
-        try (EtcdClient client = getClient(clientForm.getEndpoint(), false)) {
-
-            EtcdResponsePromise<EtcdKeysResponse> responsePromise;
-
-            if (nodeForm.isDir()) {
-                responsePromise = client.putDir(nodeForm.getKey())
-                        .ttl(nodeForm.getTtl()==null || nodeForm.getTtl() <= 0 ? null : nodeForm.getTtl()).send();
-            } else {
-                responsePromise = client.put(nodeForm.getKey(), nodeForm.getValue())
-                        .ttl(nodeForm.getTtl()==null || nodeForm.getTtl() <= 0 ? null : nodeForm.getTtl()).send();
-            }
-
-            EtcdKeysResponse.EtcdNode node = responsePromise.get().node;
-
-            rootNode = new EtcdWrapperNode();
-            rootNode.setNode(node);
-        } catch (Exception e) {
-            log.error(e.getMessage(), e);
-        }
-
-        return rootNode;
-    }
-
-    public EtcdWrapperNode deleteKey(EtcdClientForm clientForm, EditNodeForm nodeForm) {
-        EtcdWrapperNode rootNode = null;
-
-        try (EtcdClient client = getClient(clientForm.getEndpoint(), false)) {
-
-            EtcdResponsePromise<EtcdKeysResponse> responsePromise = null;
-
-            if (nodeForm.isDir()) {
-                responsePromise = client.deleteDir(nodeForm.getKey()).recursive().send();
-            } else {
-                responsePromise = client.delete(nodeForm.getKey()).send();
-            }
-
-            EtcdKeysResponse.EtcdNode node = responsePromise.get().node;
-
-            rootNode = new EtcdWrapperNode();
-            rootNode.setNode(node);
-        } catch (Exception e) {
-            log.error(e.getMessage(), e);
-        }
-
-        return rootNode;
-    }
 
     /**
      * connect to etcd and get the server info
@@ -215,7 +73,7 @@ public class EtcdV2Service implements EtcdService {
             etcdInfoVo = new EtcdInfoVo();
             EtcdSelfStatsResponse selfStatsResponse = client.getSelfStats();
             EtcdVersionResponse versionResponse = client.version();
-            if (healthResponse != null) {
+            if (versionResponse != null) {
                 etcdInfoVo.setVersion(versionResponse.server);
             }
             if (selfStatsResponse != null) {
@@ -241,7 +99,7 @@ public class EtcdV2Service implements EtcdService {
     public EtcdNode getPath(GetPathQuery query) {
         EtcdNode rootNode = null;
 
-        ServerConfig serverConfig = serverConfigRepository.getOne(query.getId());
+        ServerConfig serverConfig = serverConfigRepository.getOne(query.getServerId());
 
         try (EtcdClient client = getClient(serverConfig)) {
 
@@ -253,8 +111,8 @@ public class EtcdV2Service implements EtcdService {
 
             rootNode = gson.fromJson(nodeJson, EtcdNode.class);
 
-            if(StringUtils.isEmpty( rootNode.key)){
-                rootNode.key = etcdConfig.getSeparator();
+            if(StringUtils.isEmpty( rootNode.getKey())){
+                rootNode.setKey(etcdConfig.getSeparator());
             }
 
         } catch (Exception e) {
@@ -349,7 +207,7 @@ public class EtcdV2Service implements EtcdService {
     public EtcdNode getKey(GetPathQuery query) {
         EtcdNode rootNode = null;
 
-        ServerConfig serverConfig = serverConfigRepository.getOne(query.getId());
+        ServerConfig serverConfig = serverConfigRepository.getOne(query.getServerId());
 
         try (EtcdClient client = getClient(serverConfig)) {
 
@@ -361,8 +219,8 @@ public class EtcdV2Service implements EtcdService {
 
             rootNode = gson.fromJson(nodeJson, EtcdNode.class);
 
-            if(StringUtils.isEmpty( rootNode.key)){
-                rootNode.key = etcdConfig.getSeparator();
+            if(StringUtils.isEmpty( rootNode.getKey())){
+                rootNode.setKey(etcdConfig.getSeparator());
             }
 
         } catch (Exception e) {
@@ -386,9 +244,6 @@ public class EtcdV2Service implements EtcdService {
 
             SslContext sslContext = null;
             try {
-                /*sslContext = SslContextBuilder.forClient().keyManager(new File(serverConfig.getCertFile()),
-                        new File(serverConfig.getKeyFile())).build();*/
-
                 sslContext = SslContextBuilder.forClient().trustManager(new File(serverConfig.getCaFile())).build();
             } catch (SSLException e) {
                 throw new EtcdKeeperException(String.format("create ssl context for server config %s faild",

@@ -15,14 +15,14 @@ public class JsonResult<T> {
     private T data;
 
     public JsonResult success(){
-        this.setStatus(ResultCodes.Success.getCode());
-        this.setMessage(ResultCodes.Success.getMessage());
+        this.setStatus(ResultCodes.SUCCESS.getCode());
+        this.setMessage(ResultCodes.SUCCESS.getMessage());
         return this;
     }
 
     public JsonResult failed(){
-        this.setStatus(ResultCodes.Error.getCode());
-        this.setMessage(ResultCodes.Error.getMessage());
+        this.setStatus(ResultCodes.ERROR.getCode());
+        this.setMessage(ResultCodes.ERROR.getMessage());
         return this;
     }
 }

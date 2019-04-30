@@ -2,15 +2,13 @@ package com.cydia.etcdkeeper.exception;
 
 public class EtcdKeeperException extends RuntimeException {
 
+    private static final int DEFAULT_CODE = 500;
+
     public int getCode() {
         return code;
     }
 
-    public void setCode(int code) {
-        this.code = code;
-    }
-
-    private int code;
+    private final int code;
 
     /**
      * Constructs a new runtime exception with {@code null} as its
@@ -18,6 +16,12 @@ public class EtcdKeeperException extends RuntimeException {
      * initialized by a call to {@link #initCause}.
      */
     public EtcdKeeperException() {
+        this(DEFAULT_CODE);
+    }
+
+
+    public EtcdKeeperException(int code) {
+        this.code=code;
     }
 
     /**
@@ -29,7 +33,12 @@ public class EtcdKeeperException extends RuntimeException {
      *                later retrieval by the {@link #getMessage()} method.
      */
     public EtcdKeeperException(String message) {
+        this(DEFAULT_CODE, message);
+    }
+
+    public EtcdKeeperException(int code, String message) {
         super(message);
+        this.code= code;
     }
 
     /**
@@ -47,7 +56,12 @@ public class EtcdKeeperException extends RuntimeException {
      * @since 1.4
      */
     public EtcdKeeperException(String message, Throwable cause) {
+        this(DEFAULT_CODE, message, cause);
+    }
+
+    public EtcdKeeperException(int code, String message, Throwable cause) {
         super(message, cause);
+        this.code= code;
     }
 
     /**
@@ -64,7 +78,12 @@ public class EtcdKeeperException extends RuntimeException {
      * @since 1.4
      */
     public EtcdKeeperException(Throwable cause) {
+        this(DEFAULT_CODE, cause);
+    }
+
+    public EtcdKeeperException(int code,Throwable cause) {
         super(cause);
+        this.code = code;
     }
 
     /**
@@ -82,6 +101,11 @@ public class EtcdKeeperException extends RuntimeException {
      * @since 1.7
      */
     public EtcdKeeperException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+        this(DEFAULT_CODE,message,cause,enableSuppression, writableStackTrace);
+    }
+
+    public EtcdKeeperException(int code,String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
+        this.code= code;
     }
 }

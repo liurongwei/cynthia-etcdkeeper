@@ -11,8 +11,8 @@ import lombok.Getter;
  * create_time: 9:39
  **/
 public enum  ResultCodes {
-    Success(0,"success"),
-    Error(500, "server failed")
+    SUCCESS(0,"success"),
+    ERROR(500, "server failed")
     ;
 
     @Getter
