@@ -380,6 +380,11 @@ function saveValue() {
     var serverBase = etcdService.option.serverBase;
     var editor= stateStore.editor;
     var node = $('#etree').tree('getSelected');
+    console.log(node);
+    if(node.dir===true) {
+        $.messager.alert('Error', "key \""+node.path+ "\" is a dir,cann't be edit", 'error');
+        return ;
+    }
     $.ajax({
         type: 'PUT',
         timeout: 5000,
