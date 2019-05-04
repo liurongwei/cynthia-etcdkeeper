@@ -10,7 +10,6 @@ import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
-//import sun.plugin.com.TypeConverter;˚
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.Field;import java.util.HashMap;
@@ -32,6 +31,10 @@ public class CookiePropertyArgumentResolver implements HandlerMethodArgumentReso
         HttpServletRequest request = nativeWebRequest.getNativeRequest(HttpServletRequest.class);
 
         Field[] fields = methodParameter.getParameterType().getDeclaredFields();
+
+        if(request.getCookies()==null){
+            return null;
+        }
 
         Map<String,String> cookies = new HashMap<>(request.getCookies().length);
 

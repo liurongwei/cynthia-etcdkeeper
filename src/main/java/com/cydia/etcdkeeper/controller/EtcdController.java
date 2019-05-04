@@ -79,7 +79,7 @@ public class EtcdController {
     }
 
     @PutMapping("put")
-    public JsonResult putKv(EditNodeForm form){
+    public JsonResult putKv(@RequestBody EditNodeForm form){
 
         EtcdService service = serviceFactory.getService(form.getServerId());
 
@@ -89,7 +89,7 @@ public class EtcdController {
     }
 
     @DeleteMapping("delete")
-    public JsonResult delete(EditNodeForm form){
+    public JsonResult delete(@RequestBody EditNodeForm form){
 
         EtcdService service = serviceFactory.getService(form.getServerId());
 

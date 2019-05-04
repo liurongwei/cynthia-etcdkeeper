@@ -343,7 +343,9 @@ function showNode(node) {
             success: function (res) {
                 if (res.status != 0) {
                     $.messager.alert('Error', data.message, 'error');
-                } else {
+                    return;
+                }
+                if(res.data) {
                     if (res.data.value) {
                         editor.getSession().setValue(res.data.value);
                         changeFooter(res.data.ttl, res.data.createdIndex, res.data.modifiedIndex);

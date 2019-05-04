@@ -2,28 +2,26 @@ server:
   port: 8765
 
 spring:
-  #出现错误时, 直接抛出异常
   mvc:
-    throw-exception-if-no-handler-found: true
-  #不要为我们工程中的资源文件建立映射
+    throw-exception-if-no-handler-found: false
   resources:
     add-mappings: true
     static-locations: classpath:static
   thymeleaf:
-    cache: false                  # 是否开启模板缓存，默认为：true，开发时关闭缓存，不然没法看到实时页面！
-    mode: HTML                    # 指定模板的模式，默认为：HTML
-    encoding: UTF-8               # 指定模板的编码，默认为：UTF-8
-    prefix: classpath:/templates/ # 指定模板的前缀，默认为：classpath:/templates/
-    suffix: .html                 # 指定模板的后缀，默认为：.html
+    cache: false                  
+    mode: HTML
+    encoding: UTF-8
+    prefix: classpath:/templates/
+    suffix: .html
     servlet:
       content-type: text/html
   datasource:
-    url: jdbc:h2:${h2db};DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=MySQL
+    url: jdbc:h2:${h2db:./db/etcdkeeper};DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=MySQL
     platform: h2
     username: sa
     password:
     driverClassName: org.h2.Driver
-    #schema: classpath:db/schema.sql    # 指定 Content-Type 值，默认为：text/html
+    #schema: classpath:db/schema.sql    #use to create tables
     data: classpath:db/data.sql
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
