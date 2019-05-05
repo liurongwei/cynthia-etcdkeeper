@@ -14,7 +14,7 @@
 
         <listeners>
             <listener>
-                <class>com.cydia.etcdkeeper.caching.CacheEventLogger</class>
+                <class>com.cynthia.etcdkeeper.caching.CacheEventLogger</class>
                 <event-firing-mode>ASYNCHRONOUS</event-firing-mode>
                 <event-ordering-mode>UNORDERED</event-ordering-mode>
                 <events-to-fire-on>CREATED</events-to-fire-on>

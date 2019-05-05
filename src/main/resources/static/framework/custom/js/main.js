@@ -141,16 +141,16 @@ function resizeWindow() {
     stateStore.editor = editor;
 
     var aceMode = Cookies.get('ace-mode');
-    if (typeof(aceMode) === 'undefined') {
+    if (typeof (aceMode) === 'undefined') {
         aceMode = 'text';
     }
     stateStore.aceMode = aceMode;
 
     var treeMode = Cookies.get('tree-mode');
-    if (typeof(treeMode) === 'undefined') {
-        treeMode = 'list';
+    if (typeof (treeMode) != 'undefined' && treeMode != '') {
+        stateStore.treeMode = treeMode;
     }
-    stateStore.treeMode = treeMode;
+
 
     // get separator
     etcdService.separator();
@@ -256,8 +256,7 @@ function format(type) {
             editor.getSession().setMode('ace/mode/' + 'json');
             editor.clearSelection();
             editor.navigateFileStart();
-        }
-        catch (e) {
+        } catch (e) {
             console.log(e);
         }
     }
@@ -345,7 +344,7 @@ function showNode(node) {
                     $.messager.alert('Error', data.message, 'error');
                     return;
                 }
-                if(res.data) {
+                if (res.data) {
                     if (res.data.value) {
                         editor.getSession().setValue(res.data.value);
                         changeFooter(res.data.ttl, res.data.createdIndex, res.data.modifiedIndex);
@@ -389,9 +388,10 @@ function saveValue() {
     }
     $.ajax({
         type: 'PUT',
+        contentType: "application/json",
         timeout: 5000,
         url: serverBase + '/put',
-        data: {'key': node.path, 'value': editor.getValue(), serverId: stateStore.server.id},
+        data: JSON.stringify({'key': node.path, 'value': editor.getValue(), serverId: stateStore.server.id}),
         async: true,
         dataType: 'json',
         success: function (res) {
@@ -507,14 +507,15 @@ function createNode() {
             }
             $.ajax({
                 type: 'PUT',
+                contentType: "application/json",
                 timeout: 5000,
                 url: serverBase + '/put',
-                data: {
+                data: JSON.stringify({
                     'key': createNodePath,
                     'value': $('#cvalue').textbox().val(),
                     'ttl': $('#ttl').numberbox().val(),
                     serverId: serverId
-                },
+                }),
                 async: true,
                 dataType: 'json',
                 success: function (res) {
@@ -564,15 +565,16 @@ function createNode() {
 
             $.ajax({
                 type: 'PUT',
+                contentType: "application/json",
                 timeout: 5000,
                 url: serverBase + '/put',
-                data: {
+                data: JSON.stringify({
                     dir: $('#dir').combobox('getValue'),
                     'key': nodePath + separator + pathArr.join(separator),
                     'value': $('#cvalue').textbox().val(),
                     'ttl': $('#ttl').numberbox().val(),
                     serverId: serverId
-                },
+                }),
                 async: true,
                 dataType: 'json',
                 success: function (ret) {
@@ -666,9 +668,10 @@ function removeNode() {
         if (r) {
             $.ajax({
                 type: 'DELETE',
+                contentType: "application/json",
                 timeout: 5000,
                 url: serverBase + '/delete',
-                data: {'key': node.path, 'dir': node.dir, serverId: serverId},
+                data: JSON.stringify( {'key': node.path, 'dir': node.dir, serverId: serverId}),
                 async: true,
                 dataType: 'json',
                 success: function (res) {
