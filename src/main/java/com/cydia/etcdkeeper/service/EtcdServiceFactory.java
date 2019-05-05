@@ -7,6 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
+/**
+ * etcd service bean factory
+ */
 @Service
 public class EtcdServiceFactory {
 
@@ -16,17 +19,34 @@ public class EtcdServiceFactory {
     @Autowired
     private ApplicationContext applicationContext;
 
-    public EtcdService getService(int serverId){
+    /**
+     * get etcd service by server config id
+     *
+     * @param serverId server id
+     * @return EtcdService bean
+     */
+    public EtcdService getService(int serverId) {
         ServerConfig serverConfig = serverConfigRepository.getOne(serverId);
-        if(serverConfig==null){
-            throw new EtcdKeeperException(String.format("cann't find server config with id: %s",serverId));
+        if (serverConfig == null) {
+            throw new EtcdKeeperException(String.format("cann't find server config with id: %s", serverId));
         }
 
-        String beanName = "EtcdV"+ serverConfig.getApiVersion();
-        EtcdService service = applicationContext.getBean( beanName,EtcdService.class);
+        return getService(serverConfig.getApiVersion());
+    }
 
-        if(service==null){
-            throw new EtcdKeeperException(String.format("cann't find EtcdService with bean name: %s",beanName));
+
+    /**
+     * get etcd service by api version
+     *
+     * @param apiVersion Etcd api version
+     * @return EtcdService bean
+     */
+    public EtcdService getService(String apiVersion) {
+        String beanName = "EtcdV" + apiVersion;
+        EtcdService service = applicationContext.getBean(beanName, EtcdService.class);
+
+        if (service == null) {
+            throw new EtcdKeeperException(String.format("cann't find EtcdService with bean name: %s", beanName));
         }
 
         return service;
