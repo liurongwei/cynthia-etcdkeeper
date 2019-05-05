@@ -1,7 +1,5 @@
 package com.cydia.etcdkeeper.utils;
 
-import com.cydia.etcdkeeper.exception.EtcdKeeperException;
-import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
@@ -21,6 +19,9 @@ import java.util.List;
 @Slf4j
 public final class EtcdUtils {
 
+    private EtcdUtils(){
+
+    }
 
     /**
      * get endpoints
@@ -65,7 +66,7 @@ public final class EtcdUtils {
             try {
                 uriList.add( new URI(endpoint));
             } catch (URISyntaxException e) {
-                log.error(String.format("endpoint %s is a invalid uri string"),e);
+                log.error(String.format("endpoint %s is a invalid uri string", endpoints),e);
             }
         }
 

@@ -9,5 +9,5 @@ public class GetPathQuery {
 
     private boolean prefix;
 
-    private int id;
+    private int serverId;
 }

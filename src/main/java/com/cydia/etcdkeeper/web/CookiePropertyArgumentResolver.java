@@ -58,31 +58,26 @@ public class CookiePropertyArgumentResolver implements HandlerMethodArgumentReso
                 cookeName = field.getName();
             }
 
-            if(!cookies.containsKey(cookeName)){
-                continue;
-            }
-
-            Object value= null;
-            if(field.getType() == String.class){
-                value = cookies.get(cookeName);
-            }
-            else if(field.getType().isPrimitive()){
-                value= ConvertUtils.convert(cookies.get(cookeName), field.getType());
-            }
-            else{
-                try {
-                    Gson gson = new Gson();
-                    value = gson.fromJson(cookies.get(cookeName), field.getType());
+            if(cookies.containsKey(cookeName)) {
+                Object value = null;
+                if (field.getType() == String.class) {
+                    value = cookies.get(cookeName);
+                } else if (field.getType().isPrimitive()) {
+                    value = ConvertUtils.convert(cookies.get(cookeName), field.getType());
+                } else {
+                    try {
+                        Gson gson = new Gson();
+                        value = gson.fromJson(cookies.get(cookeName), field.getType());
+                    } catch (Exception e) {
+                        log.warn("cann't convert field %s from cookie %s 's value : %s", field.getName(),
+                                cookeName, cookies.get(cookeName));
+                    }
                 }
-                catch (Exception e){
-                    log.warn("cann't convert field %s from cookie %s 's value : %s", field.getName(),
-                            cookeName, cookies.get(cookeName));
-                }
-            }
 
-            if(value!=null){
-                field.setAccessible(true);
-                field.set( parameter, value);
+                if (value != null) {
+                    field.setAccessible(true);
+                    field.set(parameter, value);
+                }
             }
         }
 

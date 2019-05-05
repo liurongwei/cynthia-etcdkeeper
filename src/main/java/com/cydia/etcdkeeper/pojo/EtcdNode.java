@@ -1,21 +1,56 @@
 package com.cydia.etcdkeeper.pojo;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 public final class EtcdNode {
-    public String key;
-    public boolean dir;
-    public Long createdIndex;
-    public Long modifiedIndex;
-    public String value;
-    public Date expiration;
-    public Long ttl;
-    public List<EtcdNode> nodes;
+    private String key;
+    private boolean dir;
+    private Long createdIndex;
+    private Long modifiedIndex;
+    private String value;
+    private Date expiration;
+    private Long ttl;
+    private List<EtcdNode> nodes;
 
     public EtcdNode(){
-
+        this.nodes= new ArrayList<>();
     }
+
+    public void setKey(String key) {
+        this.key = key;
+    }
+
+    public void setDir(boolean dir) {
+        this.dir = dir;
+    }
+
+    public void setCreatedIndex(Long createdIndex) {
+        this.createdIndex = createdIndex;
+    }
+
+    public void setModifiedIndex(Long modifiedIndex) {
+        this.modifiedIndex = modifiedIndex;
+    }
+
+    public void setValue(String value) {
+        this.value = value;
+    }
+
+    public void setExpiration(Date expiration) {
+        this.expiration = expiration;
+    }
+
+    public void setTtl(Long ttl) {
+        this.ttl = ttl;
+    }
+
+    public void setNodes(List<EtcdNode> nodes) {
+        this.nodes = nodes;
+    }
+
+
 
     public String getKey() {
         return this.key;

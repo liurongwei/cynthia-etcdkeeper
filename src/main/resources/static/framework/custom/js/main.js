@@ -39,8 +39,8 @@ var etcdService = {
         }
         if (!record) return false;
 
-        if(record.apiVersion =='2'){
-            stateStore.treeMode ='path';
+        if (record.apiVersion == '2') {
+            stateStore.treeMode = 'path';
         }
 
         $.ajax({
@@ -116,7 +116,7 @@ $('#server-list').combobox({
     },
     formatter: function (row) {
         var opts = $(this).combobox('options');
-        return row[opts.textField];
+        return row.name + '(' + row[opts.textField] + ')';
     },
     onSelect: function (record) {
         stateStore.server = record;
@@ -285,7 +285,7 @@ function showNode(node) {
             type: 'GET',
             timeout: 5000,
             url: etcdService.option.serverBase + '/key',
-            data: {'key': node.path, id: stateStore.server.id},
+            data: {'key': node.path, serverId: stateStore.server.id},
             async: true,
             dataType: 'json',
             success: function (res) {
@@ -337,7 +337,7 @@ function showNode(node) {
             type: 'GET',
             timeout: 5000,
             url: url,
-            data: {'key': node.path, 'prefix': 'true', id: stateStore.server.id},
+            data: {'key': node.path, 'prefix': 'true', serverId: stateStore.server.id},
             async: true,
             dataType: 'json',
             success: function (res) {
@@ -378,19 +378,24 @@ function showNode(node) {
 }
 
 function saveValue() {
-    if(!stateStore.server) return;
+    if (!stateStore.server) return;
     var serverBase = etcdService.option.serverBase;
-    var editor= stateStore.editor;
+    var editor = stateStore.editor;
     var node = $('#etree').tree('getSelected');
+    console.log(node);
+    if (node.dir === true) {
+        $.messager.alert('Error', "key \"" + node.path + "\" is a dir,cann't be edit", 'error');
+        return;
+    }
     $.ajax({
         type: 'PUT',
         timeout: 5000,
-        url:  serverBase + '/put',
-        data: {'key': node.path, 'value':editor.getValue(), serverId: stateStore.server.id},
+        url: serverBase + '/put',
+        data: {'key': node.path, 'value': editor.getValue(), serverId: stateStore.server.id},
         async: true,
         dataType: 'json',
-        success: function(res) {
-            if (res.status!=0) {
+        success: function (res) {
+            if (res.status != 0) {
                 $.messager.alert('Error', res.message, 'error');
             } else {
                 editor.getSession().setValue(res.data.value);
@@ -402,8 +407,8 @@ function saveValue() {
                 messageService.alert('Save success.');
             }
         },
-        error: function(err) {
-            $.messager.alert('Error',$.toJSON(err),'error');
+        error: function (err) {
+            $.messager.alert('Error', $.toJSON(err), 'error');
         }
     });
 }
@@ -441,7 +446,7 @@ function getNode(n) {
 }
 
 function changeModeBySuffix(path) {
-    var separator= stateStore.separator;
+    var separator = stateStore.separator;
     var a = path.split(separator);
     var tokens = a.slice(a.length - 1, a.lenght)[0].split('.');
     if (tokens.length < 2) {
@@ -482,7 +487,7 @@ function showMenu(e, node) {
 }
 
 function createNode() {
-    if(!stateStore.server) return ;
+    if (!stateStore.server) return;
     var separator = stateStore.separator;
     var serverId = stateStore.server.id;
     var treeMode = stateStore.treeMode;
@@ -498,30 +503,35 @@ function createNode() {
         if ($('#cnodeForm').form('validate')) {
             var createNodePath = $('#name').textbox('getValue');
             if (!createNodePath.startsWith(separator)) {
-                createNodePath= separator + $('#name').textbox('getValue');
+                createNodePath = separator + $('#name').textbox('getValue');
             }
             $.ajax({
                 type: 'PUT',
                 timeout: 5000,
-                url:  serverBase + '/put',
-                data: {'key':createNodePath,'value':$('#cvalue').textbox().val(),'ttl':$('#ttl').numberbox().val(), serverId:serverId},
+                url: serverBase + '/put',
+                data: {
+                    'key': createNodePath,
+                    'value': $('#cvalue').textbox().val(),
+                    'ttl': $('#ttl').numberbox().val(),
+                    serverId: serverId
+                },
                 async: true,
                 dataType: 'json',
-                success: function(res) {
+                success: function (res) {
                     $('#cnode').window('close');
-                    if (res.status!=0) {
+                    if (res.status != 0) {
                         $.messager.alert('Error', res.message, 'error');
-                    }else {
+                    } else {
                         messageService.alert('Create success.');
                         var newData = [];
                         var obj = {
-                            id  :    getId(),
-                            text:    createNodePath,
-                            state:   $('#dir').combobox('getValue') === 'true'?'closed':'',
-                            dir:     $('#dir').combobox('getValue') === 'true',
-                            iconCls: $('#dir').combobox('getValue') === 'true'?'icon-dir':'icon-text',
-                            path:    createNodePath,
-                            children:[]
+                            id: getId(),
+                            text: createNodePath,
+                            state: $('#dir').combobox('getValue') === 'true' ? 'closed' : '',
+                            dir: $('#dir').combobox('getValue') === 'true',
+                            iconCls: $('#dir').combobox('getValue') === 'true' ? 'icon-dir' : 'icon-text',
+                            path: createNodePath,
+                            children: []
                         };
                         var objNode = nodeExist(obj.path);
                         if (objNode === null) {
@@ -533,11 +543,11 @@ function createNode() {
                             });
                         }
                     }
-                    $('#cvalue').textbox('enable','none');
+                    $('#cvalue').textbox('enable', 'none');
                     $('#cnodeForm').form('reset');
                     $('#ttl').numberbox('setValue', '');
                 },
-                error: function(err) {
+                error: function (err) {
                     $.messager.alert('Error', err, 'error');
                 }
             });
@@ -555,15 +565,21 @@ function createNode() {
             $.ajax({
                 type: 'PUT',
                 timeout: 5000,
-                url:  serverBase + '/put',
-                data: {dir:$('#dir').combobox('getValue'),'key':nodePath + separator + pathArr.join(separator),'value':$('#cvalue').textbox().val(),'ttl':$('#ttl').numberbox().val(),serverId: serverId},
+                url: serverBase + '/put',
+                data: {
+                    dir: $('#dir').combobox('getValue'),
+                    'key': nodePath + separator + pathArr.join(separator),
+                    'value': $('#cvalue').textbox().val(),
+                    'ttl': $('#ttl').numberbox().val(),
+                    serverId: serverId
+                },
                 async: true,
                 dataType: 'json',
-                success: function(ret) {
+                success: function (ret) {
                     $('#cnode').window('close');
-                    if (ret.status!=0) {
+                    if (ret.status != 0) {
                         $.messager.alert('Error', ret.message, 'error');
-                    }else {
+                    } else {
                         messageService.alert('Create success.');
                         var newData = [];
                         var preObj = {};
@@ -572,23 +588,23 @@ function createNode() {
                             var obj = {};
                             if (k == pathArr.length - 1) {
                                 obj = {
-                                    id  :    getId(),
-                                    text:    pathArr[k],
-                                    state:   $('#dir').combobox('getValue') == 'true'?'open':'',
-                                    dir:     $('#dir').combobox('getValue') == 'true'?true:false,
-                                    iconCls: $('#dir').combobox('getValue') == 'true'?'icon-dir':'icon-text',
-                                    path:    (prePath==separator?(prePath + ''):(prePath + separator)) + pathArr[k],
-                                    children:[]
+                                    id: getId(),
+                                    text: pathArr[k],
+                                    state: $('#dir').combobox('getValue') == 'true' ? 'open' : '',
+                                    dir: $('#dir').combobox('getValue') == 'true' ? true : false,
+                                    iconCls: $('#dir').combobox('getValue') == 'true' ? 'icon-dir' : 'icon-text',
+                                    path: (prePath == separator ? (prePath + '') : (prePath + separator)) + pathArr[k],
+                                    children: []
                                 };
                             } else {
                                 obj = {
-                                    id  :    getId(),
-                                    text:    pathArr[k],
-                                    state:   'closed',
-                                    dir:     true,
+                                    id: getId(),
+                                    text: pathArr[k],
+                                    state: 'closed',
+                                    dir: true,
                                     iconCls: 'icon-dir',
-                                    path:    (prePath==separator?(prePath + ''):(prePath + separator)) + pathArr[k],
-                                    children:[]
+                                    path: (prePath == separator ? (prePath + '') : (prePath + separator)) + pathArr[k],
+                                    children: []
                                 };
                             }
                             var objNode = nodeExist(obj.path);
@@ -617,11 +633,11 @@ function createNode() {
                         });
                     }
 
-                    $('#cvalue').textbox('enable','none');
+                    $('#cvalue').textbox('enable', 'none');
                     $('#cnodeForm').form('reset');
                     $('#ttl').numberbox('setValue', '');
                 },
-                error: function(err) {
+                error: function (err) {
                     $.messager.alert('Error', err, 'error');
                 }
             });
@@ -630,7 +646,7 @@ function createNode() {
 }
 
 function nodeExist(p) {
-    for (var i=0;i<= stateStore.idCount;i++) {
+    for (var i = 0; i <= stateStore.idCount; i++) {
         var node = $('#etree').tree('find', i);
         if (node !== null && node.path === p) {
             return node;
@@ -640,22 +656,22 @@ function nodeExist(p) {
 }
 
 function removeNode() {
-    if(!stateStore.server) return;
+    if (!stateStore.server) return;
     var serverBase = etcdService.option.serverBase;
     var node = $('#etree').tree('getSelected');
     var serverId = stateStore.server.id;
     var version = stateStore.server.apiVersion;
-    var separator  = stateStore.separator;
-    $.messager.confirm('Confirm', 'Remove ' + node.text + '?', function(r){
-        if (r){
+    var separator = stateStore.separator;
+    $.messager.confirm('Confirm', 'Remove ' + node.text + '?', function (r) {
+        if (r) {
             $.ajax({
                 type: 'DELETE',
                 timeout: 5000,
-                url:  serverBase + '/delete',
-                data:  {'key': node.path, 'dir':node.dir, serverId: serverId},
+                url: serverBase + '/delete',
+                data: {'key': node.path, 'dir': node.dir, serverId: serverId},
                 async: true,
                 dataType: 'json',
-                success: function(res) {
+                success: function (res) {
                     resetValue();
                     if (res.status === 0) {
                         messageService.alert('Delete success.');
@@ -677,7 +693,7 @@ function removeNode() {
                         $.messager.alert('Error', data, 'error');
                     }
                 },
-                error: function(err) {
+                error: function (err) {
                     $.messager.alert('Error', $.toJSON(err), 'error');
                 }
             });
