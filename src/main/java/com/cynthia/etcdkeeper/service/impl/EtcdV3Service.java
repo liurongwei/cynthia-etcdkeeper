@@ -245,7 +245,6 @@ public class EtcdV3Service implements EtcdService {
             GetOption.Builder getOptionBuiler = GetOption.newBuilder()
                     .withSortField(GetOption.SortTarget.KEY)
                     .withSortOrder(GetOption.SortOrder.ASCEND);
-            ;
 
             if (query.isPrefix()) {
                 getOptionBuiler.withPrefix(ByteSequence.from(query.getKey().getBytes()));
