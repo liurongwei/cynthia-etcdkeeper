@@ -72,15 +72,14 @@ public class EtcdV3Service implements EtcdService {
                 } else {
                     sslContextBuilder
                             .trustManager(new File(serverConfig.getCaFile()))
-                            .keyManager(new File(serverConfig.getCertFile()),
-                                    new File(serverConfig.getKeyFile().replace("etcd-key.pem","etcd-key-ssl.pem")))
+                            .keyManager(new File(serverConfig.getCertFile()), new File(serverConfig.getKeyFile()))
                     ;
                 }
 
                 clientBuilder.sslContext(sslContextBuilder.build());
             } catch (SSLException e) {
                 throw new EtcdKeeperException(
-                        String.format("ssl context build failed, server config: %s", gson.toJson(serverConfig)), e);
+                        String.format("ssl context build failed, %s, server config: %s", e.getMessage(), gson.toJson(serverConfig)), e);
             }
         }
 
