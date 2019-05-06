@@ -21,16 +21,21 @@ import io.etcd.jetcd.options.DeleteOption;
 import io.etcd.jetcd.options.GetOption;
 import io.etcd.jetcd.options.PutOption;
 import io.grpc.netty.GrpcSslContexts;
-import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.net.ssl.SSLException;
 import javax.validation.constraints.NotNull;
+import java.io.File;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -46,6 +51,12 @@ public class EtcdV3Service implements EtcdService {
 
     private final Gson gson = new Gson();
 
+    /**
+     * get etcd client by the server config info
+     *
+     * @param serverConfig server config model
+     * @return etcd client
+     */
     private Client getClient(@NotNull ServerConfig serverConfig) {
 
         List<String> endpoints = EtcdUtils.getEndpoints(serverConfig.getEndpoints(), serverConfig.isUseTls());
@@ -54,18 +65,21 @@ public class EtcdV3Service implements EtcdService {
 
         if (serverConfig.isUseTls()) {
             try {
-                SslContext sslContext = GrpcSslContexts.forClient()
-                        //.trustManager(caFile)
-                        //.keyManager(certFile, keyFile)
-                        .trustManager(InsecureTrustManagerFactory.INSTANCE)
-                        .build();
+                SslContextBuilder sslContextBuilder = GrpcSslContexts.forClient();
+                //insecure mode connect server
+                if (!serverConfig.isSecure()) {
+                    sslContextBuilder.trustManager(InsecureTrustManagerFactory.INSTANCE);
+                } else {
+                    sslContextBuilder
+                            .trustManager(new File(serverConfig.getCaFile()))
+                            .keyManager(new File(serverConfig.getCertFile()), new File(serverConfig.getKeyFile()));
+                }
 
-                clientBuilder.sslContext(sslContext);
+                clientBuilder.sslContext(sslContextBuilder.build());
             } catch (SSLException e) {
                 throw new EtcdKeeperException(
                         String.format("ssl context build failed, server config: %s", gson.toJson(serverConfig)), e);
             }
-
         }
 
         if (serverConfig.isUseAuth()) {
@@ -74,7 +88,6 @@ public class EtcdV3Service implements EtcdService {
         }
 
         return clientBuilder.build();
-
     }
 
     public EtcdInfoVo connect(ServerConfig serverConfig) {
@@ -229,14 +242,17 @@ public class EtcdV3Service implements EtcdService {
 
             KV kvClient = client.getKVClient();
 
-            GetOption getOption = GetOption.newBuilder()
+            GetOption.Builder getOptionBuiler = GetOption.newBuilder()
                     .withSortField(GetOption.SortTarget.KEY)
-                    .withPrefix(ByteSequence.from(rootNode.getKey().getBytes()))
-                    .withKeysOnly(false)
-                    .build();
+                    .withSortOrder(GetOption.SortOrder.ASCEND);
+            ;
+
+            if (query.isPrefix()) {
+                getOptionBuiler.withPrefix(ByteSequence.from(query.getKey().getBytes()));
+            }
 
             CompletableFuture<GetResponse> responseCompleteFuture =
-                    kvClient.get(ByteSequence.from(rootNode.getKey().getBytes()), getOption);
+                    kvClient.get(ByteSequence.from(rootNode.getKey().getBytes()), getOptionBuiler.build());
 
             GetResponse getResponse = responseCompleteFuture.get(etcdConfig.getClient().getTimeout(), TimeUnit.MILLISECONDS);
 
@@ -246,7 +262,7 @@ public class EtcdV3Service implements EtcdService {
                 rootNode.setDir(true);
 
                 for (KeyValue kv : kvList
-                ) {
+                        ) {
                     EtcdNode node = new EtcdNode();
                     node.setKey(new String(kv.getKey().getBytes()));
                     node.setValue(new String(kv.getValue().getBytes()));
@@ -256,6 +272,13 @@ public class EtcdV3Service implements EtcdService {
                     rootNode.getNodes().add(node);
                 }
 
+                log.info(String.format("get node count %s", kvList.size()));
+
+                if (!"list".equalsIgnoreCase(query.getTreeMode())) {
+                    Map<String, EtcdNode> nodeMap = makeDirMode(query.getKey(), rootNode.getNodes());
+                    rootNode.getNodes().clear();
+                    rootNode.getNodes().addAll(nodeMap.get(query.getKey()).getNodes());
+                }
             }
 
         } catch (Exception e) {
@@ -265,6 +288,56 @@ public class EtcdV3Service implements EtcdService {
         return rootNode;
     }
 
+    private Map<String, EtcdNode> makeDirMode(String path, List<EtcdNode> nodes) {
+        Map<String, EtcdNode> nodeMap = new TreeMap<>();
+
+        String separator = etcdConfig.getSeparator();
+        if (StringUtils.isEmpty(path)) {
+            path = separator;
+        }
+
+        for (EtcdNode node : nodes
+                ) {
+            String[] paths = node.getKey().split(separator);
+
+            if (paths.length > 0) {
+                for (int i = 0; i < paths.length; i++) {
+
+                    String key = trimPath(paths, 0, i);
+
+                    if (key.contains(path) && !nodeMap.containsKey(key)) {
+                        EtcdNode virtualNode = new EtcdNode();
+                        virtualNode.setKey(key);
+                        virtualNode.setDir(true);
+                        nodeMap.put(virtualNode.getKey(), virtualNode);
+
+                        if (i > 0) {
+                            String parentKey = trimPath(paths, 0, i - 1);
+                            if (nodeMap.containsKey(parentKey)) {
+                                nodeMap.get(parentKey).getNodes().add(virtualNode);
+                            }
+                        }
+                    }
+                }
+
+                String parentKey = trimPath(paths, 0, paths.length - 1);
+                if (nodeMap.containsKey(parentKey)) {
+                    nodeMap.get(parentKey).getNodes().add(node);
+                }
+            }
+        }
+        return nodeMap;
+    }
+
+    private String trimPath(String[] paths, int from, int to) {
+        String separator = etcdConfig.getSeparator();
+        String[] subPaths = Arrays.copyOfRange(paths, from, to);
+        String key = String.join(separator, subPaths);
+        if (!key.startsWith(separator)) {
+            key = separator + key;
+        }
+        return key;
+    }
 
     /**
      * query path
@@ -278,10 +351,14 @@ public class EtcdV3Service implements EtcdService {
         EtcdNode node = null;
         try (Client client = getClient(serverConfig)) {
 
+            GetOption.Builder getOptionBuilder = GetOption.newBuilder()
+                    .withSortField(GetOption.SortTarget.KEY)
+                    .withSortOrder(GetOption.SortOrder.ASCEND);
+
             KV kvClient = client.getKVClient();
 
             CompletableFuture<GetResponse> responseCompleteFuture =
-                    kvClient.get(ByteSequence.from(query.getKey().getBytes()));
+                    kvClient.get(ByteSequence.from(query.getKey().getBytes()), getOptionBuilder.build());
 
             GetResponse getResponse = responseCompleteFuture.get(etcdConfig.getClient().getTimeout(), TimeUnit.MILLISECONDS);
 

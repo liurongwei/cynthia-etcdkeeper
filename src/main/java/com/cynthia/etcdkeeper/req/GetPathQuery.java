@@ -10,4 +10,6 @@ public class GetPathQuery {
     private boolean prefix;
 
     private int serverId;
+
+    private String treeMode;
 }

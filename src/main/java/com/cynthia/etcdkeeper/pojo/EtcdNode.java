@@ -14,8 +14,14 @@ public final class EtcdNode {
     private Long ttl;
     private List<EtcdNode> nodes;
 
-    public EtcdNode(){
-        this.nodes= new ArrayList<>();
+    public EtcdNode() {
+        this.nodes = new ArrayList<>();
+    }
+
+    public EtcdNode(String key, boolean dir) {
+        this();
+        this.key = key;
+        this.dir = dir;
     }
 
     public void setKey(String key) {
@@ -49,7 +55,6 @@ public final class EtcdNode {
     public void setNodes(List<EtcdNode> nodes) {
         this.nodes = nodes;
     }
-
 
 
     public String getKey() {

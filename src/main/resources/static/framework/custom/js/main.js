@@ -151,7 +151,6 @@ function resizeWindow() {
         stateStore.treeMode = treeMode;
     }
 
-
     // get separator
     etcdService.separator();
 })();
@@ -284,7 +283,7 @@ function showNode(node) {
             type: 'GET',
             timeout: 5000,
             url: etcdService.option.serverBase + '/key',
-            data: {'key': node.path, serverId: stateStore.server.id},
+            data: {'key': node.path, serverId: stateStore.server.id, treeMode: stateStore.treeMode},
             async: true,
             dataType: 'json',
             success: function (res) {
@@ -326,17 +325,12 @@ function showNode(node) {
         //if (node.state === 'closed' || children.length === 0) {
 
         //}
-        var url = '';
-        if (treeMode === 'list') {
-            url = serverBase + '/key';
-        } else {
-            url = serverBase + '/path';
-        }
+        var url =  serverBase + '/path';
         $.ajax({
             type: 'GET',
             timeout: 5000,
             url: url,
-            data: {'key': node.path, 'prefix': 'true', serverId: stateStore.server.id},
+            data: {'key': node.path, 'prefix': 'true', serverId: stateStore.server.id, treeMode: stateStore.treeMode},
             async: true,
             dataType: 'json',
             success: function (res) {

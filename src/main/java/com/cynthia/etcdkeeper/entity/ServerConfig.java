@@ -42,6 +42,9 @@ public class ServerConfig {
     @Column(length = 255)
     private String certFile;
 
+    @Column
+    private boolean secure = false;
+
     @Column(nullable = false)
     private boolean useAuth = false;
 

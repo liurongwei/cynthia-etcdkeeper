@@ -15,6 +15,7 @@ import com.cynthia.etcdkeeper.vo.EtcdInfoVo;
 import com.cynthia.etcdkeeper.vo.JsonResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -37,7 +38,7 @@ public class EtcdController {
 
     @RequestMapping("servers")
     public JsonResult serverList(){
-        List<ServerConfig> serverConfigList= serverConfigRepository.findAll();
+        List<ServerConfig> serverConfigList= serverConfigRepository.findAll(Sort.by(Sort.Direction.ASC,"name"));
         return JsonResult.builder().data(serverConfigList).build().success();
     }
 
