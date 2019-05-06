@@ -72,7 +72,9 @@ public class EtcdV3Service implements EtcdService {
                 } else {
                     sslContextBuilder
                             .trustManager(new File(serverConfig.getCaFile()))
-                            .keyManager(new File(serverConfig.getCertFile()), new File(serverConfig.getKeyFile()));
+                            .keyManager(new File(serverConfig.getCertFile()),
+                                    new File(serverConfig.getKeyFile().replace("etcd-key.pem","etcd-key-ssl.pem")))
+                    ;
                 }
 
                 clientBuilder.sslContext(sslContextBuilder.build());

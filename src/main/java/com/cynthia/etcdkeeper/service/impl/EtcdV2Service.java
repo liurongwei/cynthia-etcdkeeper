@@ -13,6 +13,7 @@ import com.cynthia.etcdkeeper.vo.EtcdInfoVo;
 import com.google.gson.Gson;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import lombok.extern.slf4j.Slf4j;
 import mousio.client.retry.RetryOnce;
 import mousio.etcd4j.EtcdClient;
@@ -27,6 +28,7 @@ import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 
 import javax.net.ssl.SSLException;
+import javax.net.ssl.TrustManagerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -244,7 +246,12 @@ public class EtcdV2Service implements EtcdService {
 
             SslContext sslContext = null;
             try {
-                sslContext = SslContextBuilder.forClient().trustManager(new File(serverConfig.getCaFile())).build();
+                if(serverConfig.isSecure()) {
+                    sslContext = SslContextBuilder.forClient().trustManager(new File(serverConfig.getCaFile())).build();
+                }
+                else{
+                    sslContext = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
+                }
             } catch (SSLException e) {
                 throw new EtcdKeeperException(String.format("create ssl context for server config %s faild",
                         gson.toJson(serverConfig)), e);
