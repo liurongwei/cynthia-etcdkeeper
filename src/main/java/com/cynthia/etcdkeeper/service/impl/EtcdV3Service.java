@@ -21,8 +21,7 @@ import io.etcd.jetcd.options.DeleteOption;
 import io.etcd.jetcd.options.GetOption;
 import io.etcd.jetcd.options.PutOption;
 import io.grpc.netty.GrpcSslContexts;
-import io.netty.handler.ssl.OpenSslContext;
-import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.*;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -66,7 +65,15 @@ public class EtcdV3Service implements EtcdService {
 
         if (serverConfig.isUseTls()) {
             try {
-                SslContextBuilder sslContextBuilder = SslContextBuilder.forClient();
+                SslContextBuilder sslContextBuilder = SslContextBuilder.forClient()
+                        .sslProvider(SslProvider.OPENSSL)
+                        .applicationProtocolConfig(new ApplicationProtocolConfig(
+                                ApplicationProtocolConfig.Protocol.ALPN,
+                                // NO_ADVERTISE is currently the only mode supported by both OpenSsl and JDK providers.
+                                ApplicationProtocolConfig.SelectorFailureBehavior.NO_ADVERTISE,
+                                // ACCEPT is currently the only mode supported by both OpenSsl and JDK providers.
+                                ApplicationProtocolConfig.SelectedListenerFailureBehavior.ACCEPT,
+                                ApplicationProtocolNames.HTTP_2));
                 //insecure mode connect server
                 if (!serverConfig.isSecure()) {
                     sslContextBuilder.trustManager(InsecureTrustManagerFactory.INSTANCE);
