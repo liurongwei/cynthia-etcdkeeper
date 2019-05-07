@@ -65,7 +65,7 @@ public class EtcdV3Service implements EtcdService {
 
         if (serverConfig.isUseTls()) {
             try {
-                SslContextBuilder sslContextBuilder = SslContextBuilder.forClient()
+                SslContextBuilder sslContextBuilder = GrpcSslContexts.forClient()
                         .sslProvider(SslProvider.OPENSSL)
                         .applicationProtocolConfig(new ApplicationProtocolConfig(
                                 ApplicationProtocolConfig.Protocol.ALPN,
