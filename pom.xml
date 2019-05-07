@@ -39,13 +39,7 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/io.etcd/jetcd-core -->
-        <dependency>
-            <groupId>io.etcd</groupId>
-            <artifactId>jetcd-core</artifactId>
-            <version>0.3.0</version>
-        </dependency>
-
+        <!-- v2 api -->
         <!-- https://mvnrepository.com/artifact/org.mousio/etcd4j -->
         <dependency>
             <groupId>org.mousio</groupId>
@@ -98,19 +92,24 @@
         </dependency>
 
         <!-- v3 tls dependencies -->
+        <!-- https://mvnrepository.com/artifact/io.etcd/jetcd-core -->
+        <dependency>
+            <groupId>io.etcd</groupId>
+            <artifactId>jetcd-core</artifactId>
+            <version>0.3.0</version>
+        </dependency>
+        <!-- https://github.com/grpc/grpc-java/blob/master/SECURITY.md -->
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-tcnative-boringssl-static</artifactId>
             <version>2.0.22.Final</version>
-            <classifier>${os.detected.classifier}</classifier>
             <scope>runtime</scope>
         </dependency>
 
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-tcnative</artifactId>
-            <version>2.0.22.Final</version> <!-- see table for correct version -->
-            <classifier>${os.detected.classifier}</classifier>
+            <version>2.0.22.Final</version>
             <scope>runtime</scope>
         </dependency>
 
@@ -122,6 +121,7 @@
     </dependencies>
 
     <build>
+        <!--<finalName>${project.artifactId}-${project.version}-${os.detected.classifier}.jar</finalName>-->
         <extensions>
             <extension>
                 <groupId>com.spotify</groupId>

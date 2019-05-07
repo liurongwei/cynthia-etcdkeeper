@@ -21,6 +21,7 @@ import io.etcd.jetcd.options.DeleteOption;
 import io.etcd.jetcd.options.GetOption;
 import io.etcd.jetcd.options.PutOption;
 import io.grpc.netty.GrpcSslContexts;
+import io.netty.handler.ssl.OpenSslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import lombok.extern.slf4j.Slf4j;
@@ -65,7 +66,7 @@ public class EtcdV3Service implements EtcdService {
 
         if (serverConfig.isUseTls()) {
             try {
-                SslContextBuilder sslContextBuilder = GrpcSslContexts.forClient();
+                SslContextBuilder sslContextBuilder = SslContextBuilder.forClient();
                 //insecure mode connect server
                 if (!serverConfig.isSecure()) {
                     sslContextBuilder.trustManager(InsecureTrustManagerFactory.INSTANCE);
