@@ -75,6 +75,9 @@ public class EtcdV3Service implements EtcdService {
                                 ApplicationProtocolConfig.SelectedListenerFailureBehavior.ACCEPT,
                                 ApplicationProtocolNames.HTTP_2));
                 //insecure mode connect server
+
+
+
                 if (!serverConfig.isSecure()) {
                     sslContextBuilder.trustManager(InsecureTrustManagerFactory.INSTANCE);
                 } else {
