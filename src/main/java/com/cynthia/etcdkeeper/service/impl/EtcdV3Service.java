@@ -77,7 +77,6 @@ public class EtcdV3Service implements EtcdService {
                 //insecure mode connect server
 
 
-
                 if (!serverConfig.isSecure()) {
                     sslContextBuilder.trustManager(InsecureTrustManagerFactory.INSTANCE);
                 } else {
@@ -273,7 +272,7 @@ public class EtcdV3Service implements EtcdService {
                 rootNode.setDir(true);
 
                 for (KeyValue kv : kvList
-                        ) {
+                ) {
                     EtcdNode node = new EtcdNode();
                     node.setKey(new String(kv.getKey().getBytes()));
                     node.setValue(new String(kv.getValue().getBytes()));
@@ -286,7 +285,7 @@ public class EtcdV3Service implements EtcdService {
                 log.info(String.format("get node count %s", kvList.size()));
 
                 if (!"list".equalsIgnoreCase(query.getTreeMode())) {
-                    Map<String, EtcdNode> nodeMap = makeDirMode(query.getKey(), rootNode.getNodes());
+                    Map<String, EtcdNode> nodeMap = makeDirMode(rootNode, rootNode.getNodes());
                     rootNode.getNodes().clear();
                     rootNode.getNodes().addAll(nodeMap.get(query.getKey()).getNodes());
                 }
@@ -299,45 +298,47 @@ public class EtcdV3Service implements EtcdService {
         return rootNode;
     }
 
-    private Map<String, EtcdNode> makeDirMode(String path, List<EtcdNode> nodes) {
+    private Map<String, EtcdNode> makeDirMode(EtcdNode rootNode, List<EtcdNode> nodes) {
         Map<String, EtcdNode> nodeMap = new TreeMap<>();
 
         String separator = etcdConfig.getSeparator();
-        if (StringUtils.isEmpty(path)) {
-            path = separator;
+        if (StringUtils.isEmpty(rootNode.getKey())) {
+            rootNode.setKey(separator);
         }
 
-        for (EtcdNode node : nodes
-                ) {
-            String[] paths = node.getKey().split(separator);
+        for (EtcdNode node : nodes) {
+            splitPath(rootNode, node, nodeMap);
+        }
+        return nodeMap;
+    }
 
-            if (paths.length > 0) {
-                for (int i = 0; i < paths.length; i++) {
+    private void splitPath(EtcdNode rootNode, EtcdNode node, Map<String, EtcdNode> nodeMap) {
+        String separator = etcdConfig.getSeparator();
+        String[] paths = node.getKey().split(separator);
 
-                    String key = trimPath(paths, 0, i);
+        for (int i = 0; i < paths.length; i++) {
 
-                    if (key.contains(path) && !nodeMap.containsKey(key)) {
-                        EtcdNode virtualNode = new EtcdNode();
-                        virtualNode.setKey(key);
-                        virtualNode.setDir(true);
-                        nodeMap.put(virtualNode.getKey(), virtualNode);
+            String key = trimPath(paths, 0, i);
 
-                        if (i > 0) {
-                            String parentKey = trimPath(paths, 0, i - 1);
-                            if (nodeMap.containsKey(parentKey)) {
-                                nodeMap.get(parentKey).getNodes().add(virtualNode);
-                            }
-                        }
+            if (key.contains(rootNode.getKey()) && !nodeMap.containsKey(key)) {
+                EtcdNode virtualNode = new EtcdNode();
+                virtualNode.setKey(key);
+                virtualNode.setDir(true);
+                nodeMap.put(virtualNode.getKey(), virtualNode);
+
+                if (i > 0) {
+                    String parentKey = trimPath(paths, 0, i - 1);
+                    if (nodeMap.containsKey(parentKey)) {
+                        nodeMap.get(parentKey).getNodes().add(virtualNode);
                     }
-                }
-
-                String parentKey = trimPath(paths, 0, paths.length - 1);
-                if (nodeMap.containsKey(parentKey)) {
-                    nodeMap.get(parentKey).getNodes().add(node);
                 }
             }
         }
-        return nodeMap;
+
+        String parentKey = trimPath(paths, 0, paths.length - 1);
+        if (nodeMap.containsKey(parentKey)) {
+            nodeMap.get(parentKey).getNodes().add(node);
+        }
     }
 
     private String trimPath(String[] paths, int from, int to) {

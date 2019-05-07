@@ -28,7 +28,6 @@ import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 
 import javax.net.ssl.SSLException;
-import javax.net.ssl.TrustManagerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
