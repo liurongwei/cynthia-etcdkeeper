@@ -1,0 +1,62 @@
+server:
+  port: 8765
+
+spring:
+  mvc:
+    throw-exception-if-no-handler-found: false
+  resources:
+    add-mappings: true
+    static-locations: classpath:static
+  thymeleaf:
+    cache: false                  
+    mode: HTML
+    encoding: UTF-8
+    prefix: classpath:/templates/
+    suffix: .html
+    servlet:
+      content-type: text/html
+  datasource:
+    url: jdbc:h2:${h2db:./db/etcdkeeper};DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=MySQL
+    platform: h2
+    username: sa
+    password:
+    driverClassName: org.h2.Driver
+    #schema: classpath:db/schema.sql    #use to create tables
+    data: classpath:db/data.sql
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        show_sql: true
+        use_sql_comments: true
+        format_sql: true
+    open-in-view: true
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        trace: false
+        web-allow-others: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+      health:
+        show-details: ALWAYS
+
+etcd:
+  client:
+    timeout: 1500
+  separator: /
+  usetls: false
+  key:
+  cert:
+  cacert:
+  auth: true
+

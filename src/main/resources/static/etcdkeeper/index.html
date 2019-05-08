@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>ETCD Keeper</title>
+	<link rel="shortcut icon" href="../framework/favicon.ico">
+    <link rel="stylesheet" type="text/css" href="../framework/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="../framework/easyui/themes/metro/easyui.css">
+	<link rel="stylesheet" type="text/css" href="../framework/easyui/themes/icon.css">
+	<link rel="stylesheet" type="text/css" href="../framework/custom/css/style.css">
+	<!-- 此行代码解决ie8中iframe里嵌套此页面会导致jquery错误-->
+	<script>document.documentElement.focus();</script>
+	<script type="text/javascript" src="../framework/easyui/jquery.min.js"></script>
+	<script type="text/javascript" src="../framework/easyui/jquery.easyui.min.js"></script>
+	<script type="text/javascript" src="../framework/easyui/locale/easyui-lang-en.js"></script>
+	<script type="text/javascript" src="../framework/jquery/jquery.json-2.2.js"></script>
+	<script type="text/javascript" src="../framework/custom/js/common.js"></script>
+	<script type="text/javascript" src="../framework/js.cookie-2.1.4.min.js"></script>
+	<script type="text/javascript" src="../framework/ace/ace.js" charset="utf-8"></script>
+	<style>
+		#value {
+			position: absolute;
+			top: 40px;
+			right: 15px;
+			bottom: 40px;
+			left: 15px;
+			border:1px solid #ddd;
+			font-size: 13px!important;
+		}
+	</style>
+</head>
+<body style="overflow: hidden;">
+    <div id='loadingDiv' style="position: absolute; z-index: 1000; top: 0px; left: 0px; width: 100%; height: 100%; background: white; text-align: center;">
+        <h1 style="top: 48%; position: relative;">
+            <img src="../framework/custom/img/cube.gif" height="32" width="32"/>
+        </h1>
+    </div>
+    <h2><img src="../framework/logo.png" width="20" style="position:relative;top:3px;"></img><font color="00a0e9"> ETCD</font> Keeper</h2>
+	<div class="noborder">
+		<span class="glyphicon glyphicon-list" style="font-size: 15px;top: 5px;"></span>
+        <input id="server-list" name="server" style="width:360px;height:30px;"/>
+	</div>
+	<div style="margin:5px 0;"></div>
+	<div id="elayout" class="easyui-layout" style="width:100%;height:550px;">
+		<div id="p" data-options="region:'west',tools:'#westTools'" title="Nodes" style="width:30%;padding:10px">
+			<ul id="etree" class="easyui-tree"></ul>
+		</div>
+		<div data-options="region:'center',tools:'#centerTools',footer:'#footer'" title="/" spellcheck="false" style="padding:10px;overflow:hidden;">
+			<div id="value"></div>
+		</div>
+	</div>
+
+	<div id="footer" style="padding:5px;color:#777;">&nbsp;</div>
+	<div id="westTools">
+		<a href="javascript:void(0)" class="icon-path" style="margin-right:4px;" onclick="changeTreeMode();" title="Tree mode"></a>
+		<a href="javascript:void(0)" class="icon-reload" onclick="etcdService.connect();" title="Refresh tree"></a>
+	</div>
+	<div id="centerTools">
+		<a href="javascript:void(0)" class="easyui-menubutton" style="width:60px;height:15px;" data-options="menu:'#modeMenu'">Mode</a>
+		<a href="javascript:void(0)" class="icon-text" style="margin-right:4px;" onclick="format();" title="Format content"></a>
+		<a href="javascript:void(0)" class="icon-save" onclick="saveValue();" title="Save content"></a>
+	</div>
+	<div id="treeDirMenu" class="easyui-menu" style="width:150px;">
+		<div onclick="$('#cnode').window('open')" data-options="iconCls:'icon-add'">Create Node</div>
+		<div onclick="removeNode()" data-options="iconCls:'icon-remove'">Remove Node</div>
+	</div>
+	<div id="treeNodeMenu" class="easyui-menu" style="width:150px;">
+		<div onclick="removeNode()" data-options="iconCls:'icon-remove'">Remove Node</div>
+	</div>
+
+	<div id="cnode" class="easyui-window" title="Create node" data-options="modal:true,closed:true" style="width:650px;height:480px;padding:10px;display: none">
+		<div style="padding:10px 40px 20px 40px">
+			<form id="cnodeForm">
+				<table cellpadding="10">
+					<tr>
+						<td>Name:</td>
+						<td><input id="name" class="easyui-textbox" type="text" name="name" data-options="required:true" style="width:450px;"/></td>
+					</tr>
+					<tr>
+						<td>Dir:</td>
+						<td>
+							<select id="dir" class="easyui-combobox" name="dir" data-options="panelHeight:'auto',onSelect:selDir" style="width:70px;">
+								<option value="true">TRUE</option>
+								<option value="false" selected="selected">FALSE</option>
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td>TTL:</td>
+						<td><input id="ttl" class="easyui-numberbox" type="text" name="ttl" data-options="" style="width:450px;"/></td>
+					</tr>
+					<tr>
+						<td>Value:</td>
+						<td spellcheck="false"><textarea id="cvalue" class="easyui-textbox" name="value" data-options="multiline:true" style="width:450px;height:200px"></textarea></td>
+					</tr>
+				</table>
+			</form>
+			<div style="text-align:center;padding:5px">
+				<a href="javascript:void(0)" class="easyui-linkbutton" onclick="createNode()">Submit</a>
+			</div>
+	    </div>
+	</div>
+
+	<div style="text-align:right;color:#BDBDBD;margin-top:2px;">
+		<span id="statusVersion"></span>
+		<span id="statusSize" style="margin-left: 10px;"></span>
+		<span id="statusMember" style="margin-left: 10px;"></span>
+		<span style="margin-left: 10px;">ETCD Keeper 0.7.4</span>
+	</div>
+
+	<div id="modeMenu" style="">
+		<div id="mode_text" onclick="changeMode('text')">text</div>
+		<div id="mode_toml" onclick="changeMode('toml')">toml</div>
+		<div id="mode_ini" onclick="changeMode('ini')">ini</div>
+		<div id="mode_yaml" onclick="changeMode('yaml')">yaml</div>
+		<div id="mode_xml" onclick="changeMode('xml')">xml</div>
+		<div id="mode_lua" onclick="changeMode('lua')">lua</div>
+		<div id="mode_javascript" onclick="changeMode('javascript')">javascript</div>
+		<div id="mode_json" onclick="changeMode('json')">json</div>
+	</div>
+
+    <div id="versionMenu" class="easyui-menu">
+        <div id="version_3" onclick="selVersion('3')">version 3</div>
+        <div id="version_2" onclick="selVersion('2')">version 2</div>
+    </div>
+    <!--<script type="text/javascript" src="../framework/custom/js/index.js"></script>-->
+    <script type="text/javascript" src="../framework/custom/js/main.js"></script>
+    <script type="text/javascript">
+        function closeLoading() {
+            $("#loadingDiv").fadeOut("normal", function () {
+                $(this).remove();
+            });
+        }
+        var no;
+        $.parser.onComplete = function () {
+            if (no) clearTimeout(no);
+            no = setTimeout(closeLoading, 1000);
+        }
+    </script>
+</body>
+</html>
