@@ -2,7 +2,7 @@ FROM openjdk:8-jdk-alpine
 MAINTAINER liuronngwei1981@vip.qq.com
 
 VOLUME /tmp
-RUN apk update && apk add libc6-compat
+RUN apk update && apk add libc6-compat bash
 
 ARG DEPENDENCY=target/dependency
 COPY ${DEPENDENCY}/BOOT-INF/lib /app/lib
